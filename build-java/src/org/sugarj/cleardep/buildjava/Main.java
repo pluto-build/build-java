@@ -24,10 +24,12 @@ public class Main {
 		
 		try {
 			List<Path> files = new ArrayList<Path>();
-			for (RelativePath p: FileCommands.listFiles(buildContext.baseDir, new FileExtensionFilter("java"))) {
+			for (RelativePath p: FileCommands.listFiles(baseDir, new FileExtensionFilter("java"))) {
 				files.add(p);
 			}
-			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), baseDir, new ArrayList<Path>(), new ArrayList<RequirableCompilationUnit>());
+			List<Path> paths = new ArrayList<>();
+			paths.add(baseDir);
+			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, null, null);
 			
 			buildContext.java.require(input, new SimpleMode());
 		} catch (IOException e) {
