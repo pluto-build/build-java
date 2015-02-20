@@ -71,7 +71,7 @@ public class JavaBuilder extends Builder<BuildContext, JavaBuilder.Input, Simple
 			}
 			Path sourcePath = input.sourcePaths.get(0); // TODO support multiple source paths
 			// TODO support input.additionalArgs
-			List<Path> outFiles = JavaCommands.javac(input.inputFiles, input.targetDir, sourcePath, input.classPaths);
+			List<Path> outFiles = JavaCommands.javac(input.inputFiles, sourcePath, input.targetDir, input.classPaths);
 			for (Path p: outFiles) {
 				result.addGeneratedFile(p);
 			}
