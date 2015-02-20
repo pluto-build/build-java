@@ -1,6 +1,0 @@
-[submodule "cleardep"]
-	path = cleardep
-	url = https://xmanu@github.com/sugar-lang/cleardep.git
-[submodule "common"]
-	path = common
-	url = https://xmanu@github.com/sugar-lang/common.git
