@@ -13,6 +13,7 @@ import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.CommandExecution;
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.StringCommands;
 import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
@@ -25,6 +26,7 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	};
 	
 	public static enum Mode { Create, List, Extract, Update, GenIndex;
+		
 		public String option() {
 			switch (this) {
 			case Create: return "c";
@@ -71,9 +73,9 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	
 	@Override
 	protected Path persistentPath(Input input) {
-		int hash = Arrays.hashCode(input.files);
 		if (input.jarPath != null)
-			return FileCommands.addExtension(input.jarPath, hash + ".dep");
+			return FileCommands.addExtension(input.jarPath, "dep");
+		int hash = Arrays.hashCode(input.files);
 		if (input.manifestPath != null)
 			return FileCommands.addExtension(input.manifestPath, "jar." + hash + ".dep");
 		if (input.baseDir != null)
@@ -117,6 +119,8 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		}
 		
 		for (String s : input.files) {
+			args.add(s);
+			
 			Path p;
 			if (AbsolutePath.acceptable(s))
 				p = new AbsolutePath(s);
@@ -125,7 +129,6 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 			else
 				p = new AbsolutePath("./" + s);
 			
-			args.add(p.getAbsolutePath());
 			
 			if (p.getFile().isDirectory())
 				for (Path file : FileCommands.listFilesRecursive(p))
@@ -134,17 +137,15 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 				result.addExternalFileDependency(p);
 		}
 
-		String[] command = new String[1 + flags.size() + args.size()];
+		String[] command = new String[1 + 1 + args.size()];
 		command[0] = "jar";
-		int i = 1;
-		for (String flag : flags) {
-			command[i] = flag;
-			i++;
-		}
+		command[1] = StringCommands.printListSeparated(flags, "");
+		int i = 2;
 		for (String arg : args) {
 			command[i] = arg;
 			i++;
 		}
+		
 		new CommandExecution(true).execute(command);
 		
 		if (input.jarPath != null)
