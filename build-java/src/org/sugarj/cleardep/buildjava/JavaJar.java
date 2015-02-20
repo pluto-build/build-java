@@ -37,6 +37,18 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 			default: return "";
 			}
 		}
+		
+		public String modeForPath() {
+			switch (this) {
+			case Create: return "generate";
+			case List: return "list";
+			case Extract: return "extract";
+			case Update: return "generate";
+			case GenIndex: return "index";
+			default: return "";
+			}
+		}
+
 	}
 	
 	public static class Input {
@@ -73,14 +85,15 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	
 	@Override
 	protected Path persistentPath(Input input) {
+		String mode = input.mode.modeForPath();
 		if (input.jarPath != null)
-			return FileCommands.addExtension(input.jarPath, "dep");
+			return FileCommands.addExtension(input.jarPath, mode + "." +"dep");
 		int hash = Arrays.hashCode(input.files);
 		if (input.manifestPath != null)
-			return FileCommands.addExtension(input.manifestPath, "jar." + hash + ".dep");
+			return FileCommands.addExtension(input.manifestPath, "jar." + mode + "." + hash + ".dep");
 		if (input.baseDir != null)
-			return FileCommands.addExtension(input.baseDir, "jar." + hash + ".dep");
-		return new AbsolutePath("./jar." + hash + ".dep");
+			return FileCommands.addExtension(input.baseDir, "jar." + mode + "." + hash + ".dep");
+		return new AbsolutePath("./jar." + mode + "." + hash + ".dep");
 	}
 
 	@Override
@@ -115,28 +128,49 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		
 		if (input.baseDir != null) {
 			args.add("-C");
+			result.addExternalFileDependency(input.baseDir);
 			args.add(input.baseDir.getAbsolutePath());
+			if (!FileCommands.exists(input.baseDir))
+				return;
 		}
 		
+		boolean foundSourceFile = false;
 		for (String s : input.files) {
-			args.add(s);
-			
-			Path p;
+			Path base;
 			if (AbsolutePath.acceptable(s))
-				p = new AbsolutePath(s);
+				base = null;
 			else if (input.baseDir != null)
-				p = new RelativePath(input.baseDir, s);
+				base = input.baseDir;
 			else
-				p = new AbsolutePath("./" + s);
-			
+				base = new AbsolutePath(".");
+				
+			Path p;
+			if (base == null) {
+				p = new AbsolutePath(s);
+				base = p;
+			}
+			else
+				p = new RelativePath(base, s);
 			
 			if (p.getFile().isDirectory())
-				for (Path file : FileCommands.listFilesRecursive(p))
+				for (Path file : FileCommands.listFilesRecursive(p)) {
 					result.addExternalFileDependency(file);
-			else
+					RelativePath rel = FileCommands.getRelativePath(base, file);
+					args.add(rel.getRelativePath());
+					foundSourceFile = true;
+				}
+			else {
 				result.addExternalFileDependency(p);
+				if (FileCommands.exists(p)) {
+					args.add(s);
+					foundSourceFile = true;
+				}
+			}
 		}
-
+		
+		if ((input.mode == Mode.Create || input.mode == Mode.Update) && !foundSourceFile)
+			return;
+		
 		String[] command = new String[1 + 1 + args.size()];
 		command[0] = "jar";
 		command[1] = StringCommands.printListSeparated(flags, "");
@@ -146,9 +180,11 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 			i++;
 		}
 		
-		new CommandExecution(true).execute(command);
-		
-		if (input.jarPath != null)
-			result.addGeneratedFile(input.jarPath);
+		try {
+			new CommandExecution(true).execute(command);
+		} finally {
+			if (input.jarPath != null)
+				result.addGeneratedFile(input.jarPath);
+		}
 	}
 }
