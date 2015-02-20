@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.sugarj.cleardep.SimpleMode;
 import org.sugarj.cleardep.build.BuildManager;
-import org.sugarj.cleardep.build.Builder.RequirableCompilationUnit;
 import org.sugarj.cleardep.buildjava.util.FileExtensionFilter;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.path.AbsolutePath;
@@ -29,7 +28,11 @@ public class Main {
 			}
 			List<Path> paths = new ArrayList<>();
 			paths.add(baseDir);
-			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, null, null);
+			
+			List<String> additionalArguments = new ArrayList<String>();
+			//additionalArguments.add("-XDignore.symbol.file");
+			
+			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null);
 			
 			buildContext.java.require(input, new SimpleMode());
 		} catch (IOException e) {
