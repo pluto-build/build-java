@@ -55,20 +55,17 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		public final Mode mode;
 		public final Path jarPath;
 		public final Path manifestPath;
-		public final Path baseDir;
-		public final String[] files;
+		public final Path[] files;
 		public final RequirableCompilationUnit[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
-				Path baseDir,
-				String[] files,
+				Path[] files,
 				RequirableCompilationUnit[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
-			this.baseDir = baseDir;
 			this.files = files;
 			this.requiredUnits = requiredUnits;
 		}
@@ -80,7 +77,14 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 
 	@Override
 	protected String taskDescription(Input input) {
-		return "Compile Stratego code";
+		switch (input.mode) {
+		case Create:
+		case Update: return "Generate JAR file";
+		case Extract: return "Extract files from JAR file";
+		case List: return "List table of contents of JAR file";
+		case GenIndex: return "Create index information from JAR file";
+		default: return "";
+		}
 	}
 	
 	@Override
@@ -91,8 +95,6 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		int hash = Arrays.hashCode(input.files);
 		if (input.manifestPath != null)
 			return FileCommands.addExtension(input.manifestPath, "jar." + mode + "." + hash + ".dep");
-		if (input.baseDir != null)
-			return FileCommands.addExtension(input.baseDir, "jar." + mode + "." + hash + ".dep");
 		return new AbsolutePath("./jar." + mode + "." + hash + ".dep");
 	}
 
@@ -126,50 +128,17 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 			args.add(input.jarPath.getAbsolutePath());
 		}
 		
-		if (input.baseDir != null) {
-			args.add("-C");
-			result.addExternalFileDependency(input.baseDir);
-			args.add(input.baseDir.getAbsolutePath());
-			if (!FileCommands.exists(input.baseDir))
-				return;
-		}
-		
-		boolean foundSourceFile = false;
-		for (String s : input.files) {
-			Path base;
-			if (AbsolutePath.acceptable(s))
-				base = null;
-			else if (input.baseDir != null)
-				base = input.baseDir;
-			else
-				base = new AbsolutePath(".");
-				
-			Path p;
-			if (base == null) {
-				p = new AbsolutePath(s);
-				base = p;
-			}
-			else
-				p = new RelativePath(base, s);
-			
-			if (p.getFile().isDirectory())
-				for (Path file : FileCommands.listFilesRecursive(p)) {
-					result.addExternalFileDependency(file);
-					RelativePath rel = FileCommands.getRelativePath(base, file);
-					args.add(rel.getRelativePath());
-					foundSourceFile = true;
-				}
-			else {
-				result.addExternalFileDependency(p);
-				if (FileCommands.exists(p)) {
-					args.add(s);
-					foundSourceFile = true;
-				}
+		for (Path f : input.files) {
+			result.addExternalFileDependency(f);
+			if (f instanceof AbsolutePath)
+				args.add(f.getAbsolutePath());
+			else if (f instanceof RelativePath) {
+				RelativePath frel = (RelativePath) f;
+				args.add("-C");
+				args.add(frel.getBasePath().getAbsolutePath());
+				args.add(frel.getRelativePath());
 			}
 		}
-		
-		if ((input.mode == Mode.Create || input.mode == Mode.Update) && !foundSourceFile)
-			return;
 		
 		String[] command = new String[1 + 1 + args.size()];
 		command[0] = "jar";
