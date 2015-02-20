@@ -17,3 +17,5 @@ Import-Package: org.eclipse.core.internal.events,
  org.sugarj.common.errors,
  org.sugarj.common.path,
  org.sugarj.common.util
+Export-Package: org.sugarj.cleardep.buildjava,
+ org.sugarj.cleardep.buildjava.util

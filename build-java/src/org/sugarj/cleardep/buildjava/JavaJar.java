@@ -15,6 +15,7 @@ import org.sugarj.common.CommandExecution;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
+import org.sugarj.common.path.RelativePath;
 
 public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilationUnit> {
 
@@ -41,14 +42,14 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		public final Path jarPath;
 		public final Path manifestPath;
 		public final Path baseDir;
-		public final Path[] files;
+		public final String[] files;
 		public final RequirableCompilationUnit[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
 				Path baseDir,
-				Path[] files,
+				String[] files,
 				RequirableCompilationUnit[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
@@ -69,7 +70,7 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	}
 	
 	@Override
-	public Path persistentPath(Input input) {
+	protected Path persistentPath(Input input) {
 		int hash = Arrays.hashCode(input.files);
 		if (input.jarPath != null)
 			return FileCommands.addExtension(input.jarPath, hash + ".dep");
@@ -81,15 +82,15 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	}
 
 	@Override
-	public Class<SimpleCompilationUnit> resultClass() {
+	protected Class<SimpleCompilationUnit> resultClass() {
 		return SimpleCompilationUnit.class;
 	}
 
 	@Override
-	public Stamper defaultStamper() { return LastModifiedStamper.instance; }
+	protected Stamper defaultStamper() { return LastModifiedStamper.instance; }
 
 	@Override
-	public void build(SimpleCompilationUnit result, Input input) throws IOException {
+	protected void build(SimpleCompilationUnit result, Input input) throws IOException {
 		if (input.requiredUnits != null)
 			for (RequirableCompilationUnit req : input.requiredUnits)
 				result.addModuleDependency(req.require());
@@ -115,7 +116,15 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 			args.add(input.baseDir.getAbsolutePath());
 		}
 		
-		for (Path p : input.files) {
+		for (String s : input.files) {
+			Path p;
+			if (AbsolutePath.acceptable(s))
+				p = new AbsolutePath(s);
+			else if (input.baseDir != null)
+				p = new RelativePath(input.baseDir, s);
+			else
+				p = new AbsolutePath("./" + s);
+			
 			args.add(p.getAbsolutePath());
 			
 			if (p.getFile().isDirectory())
