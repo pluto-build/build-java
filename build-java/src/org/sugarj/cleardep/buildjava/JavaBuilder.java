@@ -1,6 +1,7 @@
 package org.sugarj.cleardep.buildjava;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,24 +23,33 @@ public class JavaBuilder extends
 		Builder<JavaBuildContext, JavaBuilder.Input, SimpleCompilationUnit> {
 
 	public static BuilderFactory<JavaBuildContext, Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<JavaBuildContext, Input, SimpleCompilationUnit, JavaBuilder>() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -7592800652010485215L;
+
 		@Override
 		public JavaBuilder makeBuilder(JavaBuildContext context) {
 			return new JavaBuilder(context);
 		}
 	};
 
-	public static class Input {
+	public static class Input implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -8905198283548748809L;
 		public final List<Path> inputFiles;
 		public final Path targetDir;
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
 		public final List<String> additionalArgs;
-		public final List<RequirableCompilationUnit> requiredUnits;
+		public final List<RequirableCompilationUnit<JavaBuildContext>> requiredUnits;
 
 		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
-				List<RequirableCompilationUnit> requiredUnits) {
+				List<RequirableCompilationUnit<JavaBuildContext>> requiredUnits) {
 			this.inputFiles = inputFiles;
 			this.targetDir = targetDir;
 			this.sourcePaths = sourcePaths;
@@ -49,8 +59,8 @@ public class JavaBuilder extends
 		}
 	}
 
-	public JavaBuilder(JavaBuildContext context) {
-		super(context);
+	private JavaBuilder(JavaBuildContext context) {
+		super(context, factory);
 	}
 
 	@Override
@@ -85,8 +95,8 @@ public class JavaBuilder extends
 			throws IOException {
 		try {
 			if (input.requiredUnits != null) {
-				for (RequirableCompilationUnit u : input.requiredUnits) {
-					u.require();
+				for (RequirableCompilationUnit<JavaBuildContext> u : input.requiredUnits) {
+					u.require(this.context);
 				}
 			}
 			for (Path p : input.inputFiles) {

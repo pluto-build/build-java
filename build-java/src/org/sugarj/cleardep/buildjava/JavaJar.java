@@ -1,6 +1,7 @@
 package org.sugarj.cleardep.buildjava;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,6 +22,11 @@ import org.sugarj.common.path.RelativePath;
 public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilationUnit> {
 
 	public static BuilderFactory<BuildContext, Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<BuildContext, Input, SimpleCompilationUnit, JavaJar>() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2699844623124272272L;
+
 		@Override
 		public JavaJar makeBuilder(BuildContext context) { return new JavaJar(context); }
 	};
@@ -51,18 +57,22 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 
 	}
 	
-	public static class Input {
+	public static class Input implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4514489357830118272L;
 		public final Mode mode;
 		public final Path jarPath;
 		public final Path manifestPath;
 		public final Path[] files;
-		public final RequirableCompilationUnit[] requiredUnits;
+		public final RequirableCompilationUnit<BuildContext>[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
 				Path[] files,
-				RequirableCompilationUnit[] requiredUnits) {
+				RequirableCompilationUnit<BuildContext>[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
@@ -71,8 +81,8 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		}
 	}
 	
-	public JavaJar(BuildContext context) {
-		super(context);
+	private JavaJar(BuildContext context) {
+		super(context, factory);
 	}
 
 	@Override
@@ -109,8 +119,8 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	@Override
 	protected void build(SimpleCompilationUnit result, Input input) throws IOException {
 		if (input.requiredUnits != null)
-			for (RequirableCompilationUnit req : input.requiredUnits)
-				result.addModuleDependency(req.require());
+			for (RequirableCompilationUnit<BuildContext> req : input.requiredUnits)
+				result.addModuleDependency(req.require(this.context));
 		
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();
