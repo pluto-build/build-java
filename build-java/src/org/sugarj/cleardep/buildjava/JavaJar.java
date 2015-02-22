@@ -23,6 +23,11 @@ import org.sugarj.common.path.RelativePath;
 public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 
 	public static BuilderFactory<Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaJar>() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -3699710145857628029L;
+
 		@Override
 		public JavaJar makeBuilder(Input input, BuildManager manager) { return new JavaJar(input, manager); }
 	};

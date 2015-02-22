@@ -11,10 +11,10 @@ import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
+import org.sugarj.cleardep.buildjava.util.JavaCommands;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.JavaCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.Path;
@@ -24,6 +24,11 @@ import org.sugarj.common.util.Pair;
 public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUnit> {
 
 	public static BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder>() {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 2193786625546374284L;
+
 		@Override
 		public JavaBuilder makeBuilder(Input input, BuildManager manager) {
 			return new JavaBuilder(input, manager);
