@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.sugarj.cleardep.SimpleCompilationUnit;
-import org.sugarj.cleardep.build.BuildContext;
+import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
@@ -19,16 +19,11 @@ import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 
-public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilationUnit> {
+public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 
-	public static BuilderFactory<BuildContext, Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<BuildContext, Input, SimpleCompilationUnit, JavaJar>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -2699844623124272272L;
-
+	public static BuilderFactory<Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaJar>() {
 		@Override
-		public JavaJar makeBuilder(BuildContext context) { return new JavaJar(context); }
+		public JavaJar makeBuilder(Input input) { return new JavaJar(input); }
 	};
 	
 	public static enum Mode { Create, List, Extract, Update, GenIndex;
@@ -57,22 +52,19 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 
 	}
 	
-	public static class Input implements Serializable{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -4514489357830118272L;
+	public static class Input implements Serializable {
+		private static final long serialVersionUID = -6951002448963322561L;
 		public final Mode mode;
 		public final Path jarPath;
 		public final Path manifestPath;
 		public final Path[] files;
-		public final RequirableCompilationUnit<BuildContext>[] requiredUnits;
+		public final BuildRequirement<?,?,?>[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
 				Path[] files,
-				RequirableCompilationUnit<BuildContext>[] requiredUnits) {
+				BuildRequirement<?,?,?>[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
@@ -81,12 +73,12 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 		}
 	}
 	
-	private JavaJar(BuildContext context) {
-		super(context, factory);
+	private JavaJar(Input input) {
+		super(input);
 	}
 
 	@Override
-	protected String taskDescription(Input input) {
+	protected String taskDescription() {
 		switch (input.mode) {
 		case Create:
 		case Update: return "Generate JAR file";
@@ -98,7 +90,7 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	}
 	
 	@Override
-	protected Path persistentPath(Input input) {
+	protected Path persistentPath() {
 		String mode = input.mode.modeForPath();
 		if (input.jarPath != null)
 			return FileCommands.addExtension(input.jarPath, mode + "." +"dep");
@@ -117,10 +109,10 @@ public class JavaJar extends Builder<BuildContext, JavaJar.Input, SimpleCompilat
 	protected Stamper defaultStamper() { return LastModifiedStamper.instance; }
 
 	@Override
-	protected void build(SimpleCompilationUnit result, Input input) throws IOException {
+	protected void build(SimpleCompilationUnit result) throws IOException {
 		if (input.requiredUnits != null)
-			for (RequirableCompilationUnit<BuildContext> req : input.requiredUnits)
-				result.addModuleDependency(req.require(this.context));
+			for (BuildRequirement<?,?,?> req : input.requiredUnits)
+				require(req);
 		
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();

@@ -19,7 +19,6 @@ public class Main {
 		BuildManager manager = new BuildManager();
 		
 		Path baseDir = new AbsolutePath(args[0]);
-		JavaBuildContext buildContext = new JavaBuildContext(manager, baseDir);
 		
 		try {
 			List<Path> files = new ArrayList<Path>();
@@ -33,8 +32,7 @@ public class Main {
 			//additionalArguments.add("-XDignore.symbol.file");
 			
 			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null);
-			
-			buildContext.java.require(input, new SimpleMode());
+			manager.require(JavaBuilder.factory.makeBuilder(input), new SimpleMode());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

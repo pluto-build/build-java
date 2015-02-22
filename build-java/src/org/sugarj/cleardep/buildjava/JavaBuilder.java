@@ -7,49 +7,41 @@ import java.util.List;
 
 import org.sugarj.cleardep.CompilationUnit.State;
 import org.sugarj.cleardep.SimpleCompilationUnit;
+import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
-import org.sugarj.cleardep.buildjava.util.JavaCommands;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.JavaCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 import org.sugarj.common.util.Pair;
 
-public class JavaBuilder extends
-		Builder<JavaBuildContext, JavaBuilder.Input, SimpleCompilationUnit> {
+public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUnit> {
 
-	public static BuilderFactory<JavaBuildContext, Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<JavaBuildContext, Input, SimpleCompilationUnit, JavaBuilder>() {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -7592800652010485215L;
-
+	public static BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder>() {
 		@Override
-		public JavaBuilder makeBuilder(JavaBuildContext context) {
-			return new JavaBuilder(context);
+		public JavaBuilder makeBuilder(Input input) {
+			return new JavaBuilder(input);
 		}
 	};
 
-	public static class Input implements Serializable{
-		/**
-		 * 
-		 */
+	public static class Input implements Serializable {
 		private static final long serialVersionUID = -8905198283548748809L;
 		public final List<Path> inputFiles;
 		public final Path targetDir;
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
 		public final List<String> additionalArgs;
-		public final List<RequirableCompilationUnit<JavaBuildContext>> requiredUnits;
+		public final List<BuildRequirement<?,?,?>> requiredUnits;
 
 		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
-				List<RequirableCompilationUnit<JavaBuildContext>> requiredUnits) {
+				List<BuildRequirement<?,?,?>> requiredUnits) {
 			this.inputFiles = inputFiles;
 			this.targetDir = targetDir;
 			this.sourcePaths = sourcePaths;
@@ -59,17 +51,17 @@ public class JavaBuilder extends
 		}
 	}
 
-	private JavaBuilder(JavaBuildContext context) {
-		super(context, factory);
+	private JavaBuilder(Input input) {
+		super(input);
 	}
 
 	@Override
-	protected String taskDescription(Input input) {
+	protected String taskDescription() {
 		return "Compile Java files";
 	}
 
 	@Override
-	protected Path persistentPath(Input input) {
+	protected Path persistentPath() {
 		if (input.inputFiles.size() == 1) {
 			return new RelativePath(input.targetDir,
 					FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
@@ -91,12 +83,11 @@ public class JavaBuilder extends
 	}
 
 	@Override
-	public void build(SimpleCompilationUnit result, Input input)
-			throws IOException {
+	public void build(SimpleCompilationUnit result) throws IOException {
 		try {
 			if (input.requiredUnits != null) {
-				for (RequirableCompilationUnit<JavaBuildContext> u : input.requiredUnits) {
-					u.require(this.context);
+				for (BuildRequirement<?,?,?> u : input.requiredUnits) {
+					require(u);
 				}
 			}
 			for (Path p : input.inputFiles) {
