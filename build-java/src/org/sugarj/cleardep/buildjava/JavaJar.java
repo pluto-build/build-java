@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.sugarj.cleardep.SimpleCompilationUnit;
+import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
@@ -23,7 +24,7 @@ public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 
 	public static BuilderFactory<Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaJar>() {
 		@Override
-		public JavaJar makeBuilder(Input input) { return new JavaJar(input); }
+		public JavaJar makeBuilder(Input input, BuildManager manager) { return new JavaJar(input, manager); }
 	};
 	
 	public static enum Mode { Create, List, Extract, Update, GenIndex;
@@ -73,8 +74,8 @@ public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 		}
 	}
 	
-	private JavaJar(Input input) {
-		super(input);
+	private JavaJar(Input input, BuildManager manager) {
+		super(input, factory, manager);
 	}
 
 	@Override

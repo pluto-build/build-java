@@ -32,7 +32,7 @@ public class Main {
 			//additionalArguments.add("-XDignore.symbol.file");
 			
 			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null);
-			manager.require(JavaBuilder.factory.makeBuilder(input), new SimpleMode());
+			manager.require(JavaBuilder.factory.makeBuilder(input, manager), new SimpleMode());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

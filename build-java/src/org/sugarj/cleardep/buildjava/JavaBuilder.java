@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.sugarj.cleardep.CompilationUnit.State;
 import org.sugarj.cleardep.SimpleCompilationUnit;
+import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
@@ -24,8 +25,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 
 	public static BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder>() {
 		@Override
-		public JavaBuilder makeBuilder(Input input) {
-			return new JavaBuilder(input);
+		public JavaBuilder makeBuilder(Input input, BuildManager manager) {
+			return new JavaBuilder(input, manager);
 		}
 	};
 
@@ -51,8 +52,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 		}
 	}
 
-	private JavaBuilder(Input input) {
-		super(input);
+	private JavaBuilder(Input input, BuildManager manager) {
+		super(input, factory, manager);
 	}
 
 	@Override
