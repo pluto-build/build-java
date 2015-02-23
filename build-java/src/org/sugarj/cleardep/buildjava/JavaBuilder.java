@@ -42,12 +42,12 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
 		public final List<String> additionalArgs;
-		public final List<BuildRequirement<?,?,?>> requiredUnits;
+		public final List<BuildRequirement<?,?,?,?>> requiredUnits;
 
 		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
-				List<BuildRequirement<?,?,?>> requiredUnits) {
+				List<BuildRequirement<?,?,?,?>> requiredUnits) {
 			this.inputFiles = inputFiles;
 			this.targetDir = targetDir;
 			this.sourcePaths = sourcePaths;
@@ -92,7 +92,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 	public void build(SimpleCompilationUnit result) throws IOException {
 		try {
 			if (input.requiredUnits != null) {
-				for (BuildRequirement<?,?,?> u : input.requiredUnits) {
+				for (BuildRequirement<?,?,?,?> u : input.requiredUnits) {
 					require(u);
 				}
 			}

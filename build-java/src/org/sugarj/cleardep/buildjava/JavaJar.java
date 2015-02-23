@@ -64,13 +64,13 @@ public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 		public final Path jarPath;
 		public final Path manifestPath;
 		public final Path[] files;
-		public final BuildRequirement<?,?,?>[] requiredUnits;
+		public final BuildRequirement<?,?,?,?>[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
 				Path[] files,
-				BuildRequirement<?,?,?>[] requiredUnits) {
+				BuildRequirement<?,?,?,?>[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
@@ -117,7 +117,7 @@ public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 	@Override
 	protected void build(SimpleCompilationUnit result) throws IOException {
 		if (input.requiredUnits != null)
-			for (BuildRequirement<?,?,?> req : input.requiredUnits)
+			for (BuildRequirement<?,?,?,?> req : input.requiredUnits)
 				require(req);
 		
 		List<String> flags = new ArrayList<>();
