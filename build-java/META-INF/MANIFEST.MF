@@ -19,3 +19,4 @@ Import-Package: org.eclipse.core.internal.events,
  org.sugarj.common.util
 Export-Package: org.sugarj.cleardep.buildjava,
  org.sugarj.cleardep.buildjava.util
+Eclipse-RegisterBuddy: org.sugarj.cleardep
