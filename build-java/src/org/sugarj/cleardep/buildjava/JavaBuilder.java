@@ -5,8 +5,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import org.sugarj.cleardep.CompilationUnit;
 import org.sugarj.cleardep.CompilationUnit.State;
-import org.sugarj.cleardep.SimpleCompilationUnit;
 import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
@@ -21,9 +21,9 @@ import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 import org.sugarj.common.util.Pair;
 
-public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUnit> {
+public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 
-	public static BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaBuilder>() {
+	public static BuilderFactory<Input, CompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, CompilationUnit, JavaBuilder>() {
 		/**
 		 * 
 		 */
@@ -79,8 +79,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 	}
 
 	@Override
-	public Class<SimpleCompilationUnit> resultClass() {
-		return SimpleCompilationUnit.class;
+	public Class<CompilationUnit> resultClass() {
+		return CompilationUnit.class;
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, SimpleCompilationUni
 	}
 
 	@Override
-	public void build(SimpleCompilationUnit result) throws IOException {
+	public void build(CompilationUnit result) throws IOException {
 		try {
 			if (input.requiredUnits != null) {
 				for (BuildRequirement<?,?,?,?> u : input.requiredUnits) {

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.sugarj.cleardep.SimpleCompilationUnit;
+import org.sugarj.cleardep.CompilationUnit;
 import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
@@ -20,9 +20,9 @@ import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 
-public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
+public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 
-	public static BuilderFactory<Input, SimpleCompilationUnit, JavaJar> factory = new BuilderFactory<Input, SimpleCompilationUnit, JavaJar>() {
+	public static BuilderFactory<Input, CompilationUnit, JavaJar> factory = new BuilderFactory<Input, CompilationUnit, JavaJar>() {
 		/**
 		 * 
 		 */
@@ -107,15 +107,15 @@ public class JavaJar extends Builder<JavaJar.Input, SimpleCompilationUnit> {
 	}
 
 	@Override
-	protected Class<SimpleCompilationUnit> resultClass() {
-		return SimpleCompilationUnit.class;
+	protected Class<CompilationUnit> resultClass() {
+		return CompilationUnit.class;
 	}
 
 	@Override
 	protected Stamper defaultStamper() { return LastModifiedStamper.instance; }
 
 	@Override
-	protected void build(SimpleCompilationUnit result) throws IOException {
+	protected void build(CompilationUnit result) throws IOException {
 		if (input.requiredUnits != null)
 			for (BuildRequirement<?,?,?,?> req : input.requiredUnits)
 				require(req);

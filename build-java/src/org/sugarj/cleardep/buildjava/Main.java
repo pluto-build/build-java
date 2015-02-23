@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.sugarj.cleardep.SimpleMode;
 import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.buildjava.util.FileExtensionFilter;
 import org.sugarj.common.FileCommands;
@@ -32,7 +31,7 @@ public class Main {
 			//additionalArguments.add("-XDignore.symbol.file");
 			
 			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null);
-			manager.require(JavaBuilder.factory.makeBuilder(input, manager), new SimpleMode());
+			manager.require(JavaBuilder.factory.makeBuilder(input, manager));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
