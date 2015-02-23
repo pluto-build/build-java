@@ -108,7 +108,6 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 			for (Path p : outFiles.b) {
 				result.addExternalFileDependency(p);
 			}
-			result.setState(State.finished(true));
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder(
 					"The following errors occured during compilation:\n");

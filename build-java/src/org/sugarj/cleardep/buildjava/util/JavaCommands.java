@@ -1,13 +1,14 @@
 package org.sugarj.cleardep.buildjava.util;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.sugarj.common.CommandExecution;
+import org.sugarj.common.CommandExecution.ExecutionError;
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.AbsolutePath;
@@ -80,38 +81,19 @@ public class JavaCommands {
 			cmd[i + next] = FileCommands.toWindowsPath(sourceFiles.get(i)
 					.getAbsolutePath());
 
-		Process p = Runtime.getRuntime().exec(cmd);
-
-		BufferedReader stdInput = new BufferedReader(new InputStreamReader(
-				p.getInputStream()));
-
-		BufferedReader stdError = new BufferedReader(new InputStreamReader(
-				p.getErrorStream()));
-
-		// read the output from the command
-		String s;
-		StringBuffer buffer = new StringBuffer();
-		while ((s = stdInput.readLine()) != null) {
-			buffer.append(s).append("\n");
-		}
-		String stdOut = buffer.toString();
-		
-		// read any errors from the attempted command
-		buffer = new StringBuffer();
-		while ((s = stdError.readLine()) != null) {
-			buffer.append(s).append("\n");
-		}
-		String errOut = buffer.toString();
-		
-		boolean ok;
+		String stdOut;
+		String errOut;
+		boolean ok = false;
 		try {
-			ok = p.waitFor() == 0;
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			ok = false;
+  		String[][] result = new CommandExecution(true).execute(cmd);
+  		ok = true;
+  		stdOut = StringCommands.printListSeparated(result[0], "\n");
+  		errOut = StringCommands.printListSeparated(result[1], "\n");
+		} catch (ExecutionError e) {
+		  stdOut = StringCommands.printListSeparated(e.getOutMsgs(), "\n");
+		  errOut = StringCommands.printListSeparated(e.getErrMsgs(), "\n");
 		}
-
+		
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
 			throw new SourceCodeException(errors);
