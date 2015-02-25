@@ -57,7 +57,7 @@ public class JavaCommands {
 		cmd[next++] = "-d";
 		cmd[next++] = FileCommands.toWindowsPath(dir.getAbsolutePath());
 		cmd[next++] = "-source";
-		cmd[next++] = "1.5";
+		cmd[next++] = "1.7";
 		cmd[next++] = "-nowarn";
 		cmd[next++] = "-verbose";
 		if (sourcePaths != null && sourcePaths.size() > 0) {
