@@ -28,6 +28,8 @@ public class Environment {
 	private List<Path> sourcePath = new LinkedList<Path>();
 	private List<Path> includePath = new LinkedList<Path>();
 
+	private String javaComplianceLevel;
+
 
 	public Environment() {
 	}
@@ -82,5 +84,13 @@ public class Environment {
 
 	public RelativePath createOutPath(String relativePath) {
 		return new RelativePath(getBin(), relativePath);
+	}
+
+	public String getJavaComplianceLevel() {
+		return javaComplianceLevel;
+	}
+
+	public void setJavaComplianceLevel(String javaComplianceLevel) {
+		this.javaComplianceLevel = javaComplianceLevel;
 	}
 }

@@ -72,7 +72,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		
 		for (Path p: files) {
 			JavaBuilder.Input input = new Input(Arrays.asList(p), env.getRoot(), env.getBin(), env.getSourcePath(),
-					env.getIncludePath(), null, null, true);
+					env.getIncludePath(), Arrays.asList("-source", env.getJavaComplianceLevel()), null, true);
 			inputs.add(input);
 		}
 

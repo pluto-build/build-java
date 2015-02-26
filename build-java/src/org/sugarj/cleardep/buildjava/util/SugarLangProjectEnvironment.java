@@ -38,6 +38,8 @@ public class SugarLangProjectEnvironment {
       Path bin = new RelativePath(root, project.getOutputLocation().makeRelativeTo(fullPath).toString());
       env.setRoot(root);
       env.setBin(bin);
+      
+      env.setJavaComplianceLevel((String)JavaCore.getOptions().get("org.eclipse.jdt.core.compiler.compliance"));
 
       // TODO: do we do this here? 
       env.addToIncludePath(bin);
