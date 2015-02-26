@@ -80,8 +80,22 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 	}
 
 	protected void clean(IProgressMonitor monitor) throws CoreException {
-		// TODO: Implement clean
 		System.out.println("Starting clean...");
 		InitConsole();
+		
+		Log.log.beginTask("Starting clean", Log.ALWAYS);
+		
+		Environment env = SugarLangProjectEnvironment.makeProjectEnvironment(getProject());
+	
+		try {
+			FileCommands.delete(env.getBin());
+			FileCommands.createDir(env.getBin());
+			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
+		} catch (IOException e) {
+			Log.err.println("Clean failed...");
+		}
+		monitor.done();
+		
+		Log.log.endTask();
 	}
 }
