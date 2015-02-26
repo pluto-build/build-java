@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.sugarj.cleardep.CompilationUnit;
-import org.sugarj.cleardep.CompilationUnit.State;
 import org.sugarj.cleardep.build.BuildManager;
 import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
