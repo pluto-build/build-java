@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.sugarj.cleardep.build.BuildManager;
+import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.buildjava.JavaBuilder.Input;
 import org.sugarj.cleardep.buildjava.util.Environment;
 import org.sugarj.cleardep.buildjava.util.FileExtensionFilter;
@@ -19,7 +20,6 @@ import org.sugarj.cleardep.buildjava.util.SugarLangProjectEnvironment;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
 import org.sugarj.common.path.Path;
-import org.sugarj.common.path.RelativePath;
 
 /**
  * updates editors to show newly built results
@@ -38,7 +38,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		try {
 			List<JavaBuilder.Input> inputs = makeInputs(getProject());
 			for (Input input : inputs) {
-				manager.require(JavaBuilder.factory.makeBuilder(input, manager));
+				manager.require(new BuildRequirement<>(JavaBuilder.factory, input));
 			}
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		} catch (IOException e) {
