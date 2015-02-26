@@ -18,7 +18,6 @@ import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
-import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 import org.sugarj.common.util.Pair;
@@ -124,23 +123,46 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 				if (input.deepRequire) {
 					RelativePath relP = FileCommands.getRelativePath(input.targetDir, outFile.replaceExtension("java"));
 					
+					boolean found = false;
 					for (Path sourcePath: input.sourcePaths) {
 						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
 						if (FileCommands.exists(relSP)) {
-							if (input.inputFiles.contains(relSP)) {
-								result.addGeneratedFile(outFile);
-							} else {
+							found = true;
+							if (!input.inputFiles.contains(relSP)) {
+								found = false;
 								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
 					}
+					if (found)
+						result.addGeneratedFile(outFile);
 				} else {
 					result.addGeneratedFile(outFile);
 				}
 			}
 			for (Path p : outFiles.b) {
-				result.addExternalFileDependency(p);
+				RelativePath relP = FileCommands.getRelativePath(input.targetDir, p.replaceExtension("java"));
+				
+				if (input.deepRequire && relP != null) {
+					boolean found = false;
+					if (relP != null)
+					for (Path sourcePath: input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
+						if (FileCommands.exists(relSP)) {
+							found = true;
+							if (!input.inputFiles.contains(relSP)) {
+								found = false;
+								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+							}
+							break;
+						}
+					}
+					if (found)
+						result.addExternalFileDependency(p);
+				} else {
+					result.addExternalFileDependency(p);
+				}
 			}
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder(
