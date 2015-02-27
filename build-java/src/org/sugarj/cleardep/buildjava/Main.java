@@ -31,7 +31,7 @@ public class Main {
 			List<String> additionalArguments = new ArrayList<String>();
 			//additionalArguments.add("-XDignore.symbol.file");
 			
-			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null);
+			JavaBuilder.Input input = new JavaBuilder.Input(files, baseDir, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null, true);
 			manager.require(new BuildRequirement<>(JavaBuilder.factory, input));
 		} catch (IOException e) {
 			e.printStackTrace();

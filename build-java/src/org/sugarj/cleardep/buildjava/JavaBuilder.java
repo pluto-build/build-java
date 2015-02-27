@@ -2,6 +2,7 @@ package org.sugarj.cleardep.buildjava;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import org.sugarj.cleardep.build.BuildRequirement;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
 import org.sugarj.cleardep.buildjava.util.JavaCommands;
+import org.sugarj.cleardep.buildjava.util.ListUtils;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.FileCommands;
@@ -37,22 +39,28 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 	public static class Input implements Serializable {
 		private static final long serialVersionUID = -8905198283548748809L;
 		public final List<Path> inputFiles;
+		public final Path baseDir;
 		public final Path targetDir;
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
 		public final List<String> additionalArgs;
-		public final List<BuildRequirement<?,?,?,?>> requiredUnits;
+		public final List<BuildRequirement<?, ?, ?, ?>> requiredUnits;
+		public final Boolean deepRequire;
 
-		public Input(List<Path> inputFiles, Path targetDir,
+		public Input(List<Path> inputFiles, Path baseDir, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
-				List<BuildRequirement<?,?,?,?>> requiredUnits) {
+				List<BuildRequirement<?, ?, ?, ?>> requiredUnits,
+				Boolean deepRequire) {
 			this.inputFiles = inputFiles;
+			this.baseDir = baseDir;
 			this.targetDir = targetDir;
-			this.sourcePaths = sourcePaths;
-			this.classPaths = classPaths;
+			this.sourcePaths = sourcePaths != null ? sourcePaths : new ArrayList<Path>();
+			this.classPaths = classPaths   != null ? classPaths : new ArrayList<Path>();;
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
+			this.deepRequire = deepRequire;
+
 		}
 	}
 
@@ -62,19 +70,29 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 
 	@Override
 	protected String taskDescription() {
-		return "Compile Java files";
+		return "Compile Java files " + ListUtils.printList(input.inputFiles);
 	}
 
 	@Override
 	protected Path persistentPath() {
 		if (input.inputFiles.size() == 1) {
-			return new RelativePath(input.targetDir,
-					FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
+			//return new RelativePath(input.targetDir,
+			//		FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
+			return correspondingBinPath(input.inputFiles.get(0).replaceExtension("dep"));
 		}
 
 		int hash = Arrays.hashCode(input.inputFiles.toArray());
 
 		return new RelativePath(input.targetDir, "javaFiles" + hash + ".dep");
+	}
+	
+	private Path correspondingBinPath(Path srcFile) {
+		for (Path sourcePath: input.sourcePaths) {
+			RelativePath rel = FileCommands.getRelativePath(sourcePath, srcFile);
+			if (rel != null)
+				return new RelativePath(input.targetDir, rel.getRelativePath());
+		}
+		return input.targetDir;
 	}
 
 	@Override
@@ -101,11 +119,50 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 			Pair<List<Path>, List<Path>> outFiles = JavaCommands.javac(
 					input.inputFiles, input.sourcePaths, input.targetDir,
 					input.additionalArgs, input.classPaths);
-			for (Path p : outFiles.a) {
-				result.addGeneratedFile(p);
+			for (Path outFile : outFiles.a) {
+				if (input.deepRequire) {
+					RelativePath relP = FileCommands.getRelativePath(input.targetDir, outFile.replaceExtension("java"));
+					
+					boolean found = false;
+					for (Path sourcePath: input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
+						if (FileCommands.exists(relSP)) {
+							found = true;
+							if (!input.inputFiles.contains(relSP)) {
+								found = false;
+								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+							}
+							break;
+						}
+					}
+					if (found)
+						result.addGeneratedFile(outFile);
+				} else {
+					result.addGeneratedFile(outFile);
+				}
 			}
 			for (Path p : outFiles.b) {
-				result.addExternalFileDependency(p);
+				RelativePath relP = FileCommands.getRelativePath(input.targetDir, p.replaceExtension("java"));
+				
+				if (input.deepRequire && relP != null) {
+					boolean found = false;
+					if (relP != null)
+					for (Path sourcePath: input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
+						if (FileCommands.exists(relSP)) {
+							found = true;
+							if (!input.inputFiles.contains(relSP)) {
+								found = false;
+								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+							}
+							break;
+						}
+					}
+					if (found)
+						result.addExternalFileDependency(p);
+				} else {
+					result.addExternalFileDependency(p);
+				}
 			}
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder(
@@ -118,5 +175,4 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 			throw new IOException(errMsg.toString());
 		}
 	}
-
 }

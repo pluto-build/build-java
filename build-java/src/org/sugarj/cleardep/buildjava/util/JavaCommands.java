@@ -46,7 +46,7 @@ public class JavaCommands {
 
 		cpBuilder.append(dir);
 
-		int argNum = 9
+		int argNum = 7
 				+ (sourcePaths == null || sourcePaths.size() == 0 ? 0 : 2)
 				+ (additionalArguments != null ? additionalArguments.size() : 0);
 		int next = 0;
@@ -56,8 +56,6 @@ public class JavaCommands {
 		cmd[next++] = cpBuilder.toString();
 		cmd[next++] = "-d";
 		cmd[next++] = FileCommands.toWindowsPath(dir.getAbsolutePath());
-		cmd[next++] = "-source";
-		cmd[next++] = "1.5";
 		cmd[next++] = "-nowarn";
 		cmd[next++] = "-verbose";
 		if (sourcePaths != null && sourcePaths.size() > 0) {
