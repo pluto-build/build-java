@@ -32,18 +32,7 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		public JavaJar makeBuilder(Input input, BuildManager manager) { return new JavaJar(input, manager); }
 	};
 	
-	public static enum Mode { Create, List, Extract, Update, GenIndex;
-		
-		public String option() {
-			switch (this) {
-			case Create: return "c";
-			case List: return "t";
-			case Extract: return "x";
-			case Update: return "u";
-			case GenIndex: return "i";
-			default: return "";
-			}
-		}
+	public static enum Mode { Create, List, Extract, Update, GenIndex, CreateOrUpdate;
 		
 		public String modeForPath() {
 			switch (this) {
@@ -52,11 +41,24 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 			case Extract: return "extract";
 			case Update: return "generate";
 			case GenIndex: return "index";
+			case CreateOrUpdate: return "generate";
 			default: return "";
 			}
 		}
-
 	}
+	
+	public String option(Mode m) {
+		switch (m) {
+		case Create: return "c";
+		case List: return "t";
+		case Extract: return "x";
+		case Update: return "u";
+		case GenIndex: return "i";
+		case CreateOrUpdate: return FileCommands.fileExists(input.jarPath) ? option(Mode.Update) : option(Mode.Create);
+		default: return "";
+		}
+	}
+
 	
 	public static class Input implements Serializable {
 		private static final long serialVersionUID = -6951002448963322561L;
@@ -123,7 +125,7 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();
 		
-		flags.add(input.mode.option());
+		flags.add(option(input.mode));
 		
 		if (input.manifestPath != null) {
 			result.addExternalFileDependency(input.manifestPath);
