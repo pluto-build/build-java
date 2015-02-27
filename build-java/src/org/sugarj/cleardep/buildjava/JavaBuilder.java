@@ -39,7 +39,6 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 	public static class Input implements Serializable {
 		private static final long serialVersionUID = -8905198283548748809L;
 		public final List<Path> inputFiles;
-		public final Path baseDir;
 		public final Path targetDir;
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
@@ -47,13 +46,12 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 		public final List<BuildRequirement<?, ?, ?, ?>> requiredUnits;
 		public final Boolean deepRequire;
 
-		public Input(List<Path> inputFiles, Path baseDir, Path targetDir,
+		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
 				List<BuildRequirement<?, ?, ?, ?>> requiredUnits,
 				Boolean deepRequire) {
 			this.inputFiles = inputFiles;
-			this.baseDir = baseDir;
 			this.targetDir = targetDir;
 			this.sourcePaths = sourcePaths != null ? sourcePaths : new ArrayList<Path>();
 			this.classPaths = classPaths   != null ? classPaths : new ArrayList<Path>();;
@@ -130,7 +128,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
@@ -153,7 +151,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.baseDir, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
