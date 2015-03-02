@@ -12,7 +12,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.sugarj.cleardep.build.BuildManager;
-import org.sugarj.cleardep.build.BuildRequirement;
+import org.sugarj.cleardep.build.BuildRequest;
 import org.sugarj.cleardep.buildjava.JavaBuilder.Input;
 import org.sugarj.cleardep.buildjava.util.Environment;
 import org.sugarj.cleardep.buildjava.util.FileExtensionFilter;
@@ -38,7 +38,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		try {
 			List<JavaBuilder.Input> inputs = makeInputs(getProject());
 			for (Input input : inputs) {
-				manager.require(new BuildRequirement<>(JavaBuilder.factory, input));
+				manager.require(new BuildRequest<>(JavaBuilder.factory, input));
 			}
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		} catch (IOException e) {

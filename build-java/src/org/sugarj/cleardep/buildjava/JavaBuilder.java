@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.sugarj.cleardep.CompilationUnit;
+import org.sugarj.cleardep.BuildUnit;
 import org.sugarj.cleardep.build.BuildManager;
-import org.sugarj.cleardep.build.BuildRequirement;
+import org.sugarj.cleardep.build.BuildRequest;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
 import org.sugarj.cleardep.buildjava.util.JavaCommands;
@@ -22,9 +22,9 @@ import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 import org.sugarj.common.util.Pair;
 
-public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
+public class JavaBuilder extends Builder<JavaBuilder.Input, BuildUnit> {
 
-	public static BuilderFactory<Input, CompilationUnit, JavaBuilder> factory = new BuilderFactory<Input, CompilationUnit, JavaBuilder>() {
+	public static BuilderFactory<Input, BuildUnit, JavaBuilder> factory = new BuilderFactory<Input, BuildUnit, JavaBuilder>() {
 		/**
 		 * 
 		 */
@@ -43,13 +43,13 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 		public final List<Path> sourcePaths;
 		public final List<Path> classPaths;
 		public final List<String> additionalArgs;
-		public final List<BuildRequirement<?, ?, ?, ?>> requiredUnits;
+		public final List<BuildRequest<?, ?, ?, ?>> requiredUnits;
 		public final Boolean deepRequire;
 
 		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
-				List<BuildRequirement<?, ?, ?, ?>> requiredUnits,
+				List<BuildRequest<?, ?, ?, ?>> requiredUnits,
 				Boolean deepRequire) {
 			this.inputFiles = inputFiles;
 			this.targetDir = targetDir;
@@ -94,8 +94,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 	}
 
 	@Override
-	public Class<CompilationUnit> resultClass() {
-		return CompilationUnit.class;
+	public Class<BuildUnit> resultClass() {
+		return BuildUnit.class;
 	}
 
 	@Override
@@ -104,15 +104,15 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 	}
 
 	@Override
-	public void build(CompilationUnit result) throws IOException {
+	public void build(BuildUnit result) throws IOException {
 		try {
 			if (input.requiredUnits != null) {
-				for (BuildRequirement<?,?,?,?> u : input.requiredUnits) {
+				for (BuildRequest<?,?,?,?> u : input.requiredUnits) {
 					require(u);
 				}
 			}
 			for (Path p : input.inputFiles) {
-				result.addExternalFileDependency(p);
+				result.requires(p);
 			}
 			Pair<List<Path>, List<Path>> outFiles = JavaCommands.javac(
 					input.inputFiles, input.sourcePaths, input.targetDir,
@@ -134,9 +134,9 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 						}
 					}
 					if (found)
-						result.addGeneratedFile(outFile);
+						result.generates(outFile);
 				} else {
-					result.addGeneratedFile(outFile);
+					result.generates(outFile);
 				}
 			}
 			for (Path p : outFiles.b) {
@@ -157,9 +157,9 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, CompilationUnit> {
 						}
 					}
 					if (found)
-						result.addExternalFileDependency(p);
+						result.requires(p);
 				} else {
-					result.addExternalFileDependency(p);
+					result.requires(p);
 				}
 			}
 		} catch (SourceCodeException e) {
