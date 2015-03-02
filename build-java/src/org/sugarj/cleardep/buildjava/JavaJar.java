@@ -6,9 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.sugarj.cleardep.CompilationUnit;
-import org.sugarj.cleardep.build.BuildManager;
-import org.sugarj.cleardep.build.BuildRequirement;
+import org.sugarj.cleardep.None;
+import org.sugarj.cleardep.build.BuildRequest;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
@@ -20,16 +19,13 @@ import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 
-public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
+public class JavaJar extends Builder<JavaJar.Input, None> {
 
-	public static BuilderFactory<Input, CompilationUnit, JavaJar> factory = new BuilderFactory<Input, CompilationUnit, JavaJar>() {
-		/**
-		 * 
-		 */
+	public static BuilderFactory<Input, None, JavaJar> factory = new BuilderFactory<Input, None, JavaJar>() {
 		private static final long serialVersionUID = -3699710145857628029L;
 
 		@Override
-		public JavaJar makeBuilder(Input input, BuildManager manager) { return new JavaJar(input, manager); }
+		public JavaJar makeBuilder(Input input) { return new JavaJar(input); }
 	};
 	
 	public static enum Mode { Create, List, Extract, Update, GenIndex, CreateOrUpdate;
@@ -66,13 +62,13 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		public final Path jarPath;
 		public final Path manifestPath;
 		public final Path[] files;
-		public final BuildRequirement<?,?,?,?>[] requiredUnits;
+		public final BuildRequest<?,?,?,?>[] requiredUnits;
 		public Input(
 				Mode mode,
 				Path jarPath,
 				Path manifestPath,
 				Path[] files,
-				BuildRequirement<?,?,?,?>[] requiredUnits) {
+				BuildRequest<?,?,?,?>[] requiredUnits) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
@@ -81,8 +77,8 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		}
 	}
 	
-	private JavaJar(Input input, BuildManager manager) {
-		super(input, factory, manager);
+	private JavaJar(Input input) {
+		super(input);
 	}
 
 	@Override
@@ -109,17 +105,12 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 	}
 
 	@Override
-	protected Class<CompilationUnit> resultClass() {
-		return CompilationUnit.class;
-	}
-
-	@Override
 	protected Stamper defaultStamper() { return LastModifiedStamper.instance; }
 
 	@Override
-	protected void build(CompilationUnit result) throws IOException {
+	protected None build() throws IOException {
 		if (input.requiredUnits != null)
-			for (BuildRequirement<?,?,?,?> req : input.requiredUnits)
+			for (BuildRequest<?,?,?,?> req : input.requiredUnits)
 				require(req);
 		
 		List<String> flags = new ArrayList<>();
@@ -128,7 +119,7 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		flags.add(option(input.mode));
 		
 		if (input.manifestPath != null) {
-			result.addExternalFileDependency(input.manifestPath);
+			requires(input.manifestPath);
 			flags.add("m");
 			args.add(input.manifestPath.getAbsolutePath());
 		}
@@ -139,7 +130,7 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 		}
 		
 		for (Path f : input.files) {
-			result.addExternalFileDependency(f);
+			requires(f);
 			if (f instanceof AbsolutePath)
 				args.add(f.getAbsolutePath());
 			else if (f instanceof RelativePath) {
@@ -163,7 +154,8 @@ public class JavaJar extends Builder<JavaJar.Input, CompilationUnit> {
 			new CommandExecution(true).execute(command);
 		} finally {
 			if (input.jarPath != null)
-				result.addGeneratedFile(input.jarPath);
+				generates(input.jarPath);
 		}
+		return None.val;
 	}
 }
