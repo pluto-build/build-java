@@ -16,7 +16,7 @@ import org.sugarj.common.path.RelativePath;
 public class Main {
 
 	public static void main(String[] args) {
-		BuildManager manager = new BuildManager();
+		BuildManager manager = BuildManager.acquire();
 		
 		Path baseDir = new AbsolutePath(args[0]);
 		

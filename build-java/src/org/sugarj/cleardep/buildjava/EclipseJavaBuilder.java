@@ -31,7 +31,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 	protected IProject[] build(int kind, Map<String, String> args,
 			IProgressMonitor monitor) {
 		System.out.println("Starting build...");
-		BuildManager manager = new BuildManager();
+		BuildManager manager = BuildManager.acquire();
 
 		InitConsole();
 		
