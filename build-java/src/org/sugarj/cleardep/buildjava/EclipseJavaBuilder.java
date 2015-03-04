@@ -17,6 +17,7 @@ import org.sugarj.cleardep.buildjava.JavaBuilder.Input;
 import org.sugarj.cleardep.buildjava.util.Environment;
 import org.sugarj.cleardep.buildjava.util.FileExtensionFilter;
 import org.sugarj.cleardep.buildjava.util.SugarLangProjectEnvironment;
+import org.sugarj.cleardep.output.None;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
 import org.sugarj.common.path.Path;
@@ -31,15 +32,21 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 	protected IProject[] build(int kind, Map<String, String> args,
 			IProgressMonitor monitor) {
 		System.out.println("Starting build...");
-		BuildManager manager = BuildManager.acquire();
 
 		InitConsole();
 		
 		try {
 			List<JavaBuilder.Input> inputs = makeInputs(getProject());
+			@SuppressWarnings("unchecked")
+			BuildRequest<?, None, ?, ?>[] reqs = (BuildRequest<?, None, ?, ?>[]) new BuildRequest[inputs.size()];
+			int i = 0;
 			for (Input input : inputs) {
-				manager.require(new BuildRequest<>(JavaBuilder.factory, input));
+				reqs[i] = new BuildRequest<>(JavaBuilder.factory, input);
+				i++;
 			}
+			
+			BuildManager.buildAll(reqs);
+			
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		} catch (IOException e) {
 			e.printStackTrace();

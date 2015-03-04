@@ -16,8 +16,6 @@ import org.sugarj.common.path.RelativePath;
 public class Main {
 
 	public static void main(String[] args) {
-		BuildManager manager = BuildManager.acquire();
-		
 		Path baseDir = new AbsolutePath(args[0]);
 		
 		try {
@@ -32,7 +30,7 @@ public class Main {
 			//additionalArguments.add("-XDignore.symbol.file");
 			
 			JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null, true);
-			manager.require(new BuildRequest<>(JavaBuilder.factory, input));
+			BuildManager.build(new BuildRequest<>(JavaBuilder.factory, input));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
