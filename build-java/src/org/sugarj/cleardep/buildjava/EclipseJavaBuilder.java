@@ -48,8 +48,6 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 			BuildManager.buildAll(reqs);
 			
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
-		} catch (IOException e) {
-			e.printStackTrace();
 		} catch (CoreException e) {
 			e.printStackTrace();
 		} finally {
