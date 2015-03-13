@@ -99,11 +99,11 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		try {
 			if (input.requiredUnits != null) {
 				for (BuildRequest<?,?,?,?> u : input.requiredUnits) {
-					require(u);
+					requireBuild(u);
 				}
 			}
 			for (Path p : input.inputFiles) {
-				requires(p);
+				require(p);
 			}
 			Pair<List<Path>, List<Path>> outFiles = JavaCommands.javac(
 					input.inputFiles, input.sourcePaths, input.targetDir,
@@ -119,15 +119,15 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								requireBuild(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
 					}
 					if (found)
-						generates(outFile);
+						generate(outFile);
 				} else {
-					generates(outFile);
+					generate(outFile);
 				}
 			}
 			for (Path p : outFiles.b) {
@@ -142,15 +142,15 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								require(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								requireBuild(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
 					}
 					if (found)
-						requires(p);
+						require(p);
 				} else {
-					requires(p);
+					require(p);
 				}
 			}
 		} catch (SourceCodeException e) {

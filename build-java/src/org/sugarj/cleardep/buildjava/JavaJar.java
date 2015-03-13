@@ -111,7 +111,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 	protected None build() throws IOException {
 		if (input.requiredUnits != null)
 			for (BuildRequest<?,?,?,?> req : input.requiredUnits)
-				require(req);
+				requireBuild(req);
 		
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();
@@ -119,7 +119,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		flags.add(option(input.mode));
 		
 		if (input.manifestPath != null) {
-			requires(input.manifestPath);
+			require(input.manifestPath);
 			flags.add("m");
 			args.add(input.manifestPath.getAbsolutePath());
 		}
@@ -130,7 +130,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		}
 		
 		for (Path f : input.files) {
-			requires(f);
+			require(f);
 			if (f instanceof AbsolutePath)
 				args.add(f.getAbsolutePath());
 			else if (f instanceof RelativePath) {
@@ -154,7 +154,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 			new CommandExecution(true).execute(command);
 		} finally {
 			if (input.jarPath != null)
-				generates(input.jarPath);
+				generate(input.jarPath);
 		}
 		return None.val;
 	}
