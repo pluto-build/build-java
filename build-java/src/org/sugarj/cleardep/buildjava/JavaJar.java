@@ -12,7 +12,7 @@ import org.sugarj.cleardep.build.BuilderFactory;
 import org.sugarj.cleardep.output.None;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
-import org.sugarj.common.CommandExecution;
+import org.sugarj.common.Exec;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.StringCommands;
 import org.sugarj.common.path.AbsolutePath;
@@ -151,7 +151,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		}
 		
 		try {
-			new CommandExecution(true).execute(command);
+			Exec.run(command);
 		} finally {
 			if (input.jarPath != null)
 				generate(input.jarPath);

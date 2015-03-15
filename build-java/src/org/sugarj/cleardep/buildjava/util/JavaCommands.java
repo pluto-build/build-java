@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.sugarj.common.CommandExecution;
-import org.sugarj.common.CommandExecution.ExecutionError;
+import org.sugarj.common.Exec;
+import org.sugarj.common.Exec.ExecutionError;
+import org.sugarj.common.Exec.ExecutionResult;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
@@ -83,13 +84,13 @@ public class JavaCommands {
 		String errOut;
 		boolean ok = false;
 		try {
-  		String[][] result = new CommandExecution(true).execute(cmd);
-  		ok = true;
-  		stdOut = StringCommands.printListSeparated(result[0], "\n");
-  		errOut = StringCommands.printListSeparated(result[1], "\n");
+			ExecutionResult  result = Exec.run(cmd);
+			ok = true;
+			stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
+			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
 		} catch (ExecutionError e) {
-		  stdOut = StringCommands.printListSeparated(e.getOutMsgs(), "\n");
-		  errOut = StringCommands.printListSeparated(e.getErrMsgs(), "\n");
+		  stdOut = StringCommands.printListSeparated(e.outMsgs, "\n");
+		  errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
 		
 		if (!ok) {
