@@ -63,7 +63,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	}
 
 	@Override
-	protected String taskDescription() {
+	protected String description() {
 		return "Compile Java files " + ListUtils.printList(input.inputFiles);
 	}
 

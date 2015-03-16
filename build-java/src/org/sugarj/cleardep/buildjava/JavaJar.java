@@ -82,7 +82,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 	}
 
 	@Override
-	protected String taskDescription() {
+	protected String description() {
 		switch (input.mode) {
 		case Create:
 		case Update: return "Generate JAR file";
