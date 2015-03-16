@@ -154,7 +154,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 			Exec.run(command);
 		} finally {
 			if (input.jarPath != null)
-				generate(input.jarPath);
+				provide(input.jarPath);
 		}
 		return None.val;
 	}

@@ -125,9 +125,9 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 						}
 					}
 					if (found)
-						generate(outFile);
+						provide(outFile);
 				} else {
-					generate(outFile);
+					provide(outFile);
 				}
 			}
 			for (Path p : outFiles.b) {
