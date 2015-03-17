@@ -56,7 +56,7 @@ public class SomeBuilder extends Builder<SomeBuilder.SomeInput, None> {
 	}
 
 	@Override
-	protected String taskDescription() {
+	protected String description() {
 		return "Some Builder";
 	}
 
