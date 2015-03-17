@@ -30,5 +30,4 @@ public class Main {
 		JavaBuilder.Input input = new JavaBuilder.Input(files, new RelativePath(baseDir, "bin"), paths, paths, additionalArguments, null, true);
 		BuildManager.build(new BuildRequest<>(JavaBuilder.factory, input));
 	}
-	
 }
