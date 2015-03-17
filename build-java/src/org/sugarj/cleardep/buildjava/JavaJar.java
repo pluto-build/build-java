@@ -109,9 +109,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 
 	@Override
 	protected None build() throws IOException {
-		if (input.requiredUnits != null)
-			for (BuildRequest<?,?,?,?> req : input.requiredUnits)
-				requireBuild(req);
+		requireBuild(input.requiredUnits);
 		
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();
