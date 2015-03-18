@@ -192,9 +192,18 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					ClassPool cp = ClassPool.getDefault();
 
 					for (Path p : input.inputFiles) {
-						RelativePath relPath = FileCommands.getRelativePath(
-								input.targetDir, p);
-						String fullQualifiedName = relPath.getRelativePath()
+						RelativePath relPath = null;
+						for (Path sourcePath : input.sourcePaths) {
+							relPath = FileCommands.getRelativePath(sourcePath, p);
+							if (relPath != null) {
+								break;
+							}
+						}
+
+						if (relPath == null)
+							throw new IOException("Could not determine full qualified name for " + p);
+						
+						String fullQualifiedName = relPath.getRelativePath().split("\\.")[0]
 								.replace('/', '.');
 
 						CtClass cc = cp.get(fullQualifiedName);
@@ -206,7 +215,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					Log.log.log(
 							"Hotswap unsuccessful. Please start the instance with the jvm parameters -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000",
 							Log.CORE);
-					ex.printStackTrace();
+					throw ex;
 				} catch (IllegalConnectorArgumentsException ex) {
 
 				} catch (NotFoundException e) {
