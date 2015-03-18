@@ -113,7 +113,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	public None build() throws IOException {
 		try {
 			requireBuild(input.requiredUnits);
-			
+
 			for (Path p : input.inputFiles) {
 				require(p);
 			}
@@ -194,36 +194,39 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					for (Path p : input.inputFiles) {
 						RelativePath relPath = null;
 						for (Path sourcePath : input.sourcePaths) {
-							relPath = FileCommands.getRelativePath(sourcePath, p);
+							relPath = FileCommands.getRelativePath(sourcePath,
+									p);
 							if (relPath != null) {
 								break;
 							}
 						}
 
 						if (relPath == null)
-							throw new IOException("Could not determine full qualified name for " + p);
-						
-						String fullQualifiedName = relPath.getRelativePath().split("\\.")[0]
-								.replace('/', '.');
+							throw new IOException(
+									"Could not determine full qualified name for "
+											+ p);
+
+						String fullQualifiedName = relPath.getRelativePath()
+								.split("\\.")[0].replace('/', '.');
 
 						CtClass cc = cp.get(fullQualifiedName);
 						byte[] byteCode = cc.toBytecode();// loadClassData("org.sugarj.cleardep.build.SomeClass");
 						hs.reload(fullQualifiedName, byteCode);
-						Log.log.log("Successfully hotswapped: " + fullQualifiedName, Log.CORE);
+						Log.log.log("Successfully hotswapped: "
+								+ fullQualifiedName, Log.CORE);
 					}
-				} catch (IOException | NullPointerException ex) {
+				} catch (IOException | NullPointerException e) {
 					Log.log.log(
 							"Hotswap unsuccessful. Please start the instance with the jvm parameters -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000",
 							Log.CORE);
-					throw ex;
-				} catch (IllegalConnectorArgumentsException ex) {
-
-				} catch (NotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CannotCompileException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					throw new IOException("Hotswap failed.");
+					//e.printStackTrace();
+				} catch (IllegalConnectorArgumentsException | NotFoundException | CannotCompileException | RuntimeException e) {
+					Log.log.log(
+							"Hotswap unsuccessful. Can only hotswap the implementation of a builder, if the methods and field signatures stay the same...\nRestart the build process to continue building...",
+							Log.CORE);
+					throw new IOException("Hotswap failed.");
+					//e.printStackTrace();
 				}
 			}
 		} catch (SourceCodeException e) {
