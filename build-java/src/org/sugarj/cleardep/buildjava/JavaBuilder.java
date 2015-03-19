@@ -67,7 +67,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
-
+			this.noMetaDependency = true;
 		}
 	}
 
