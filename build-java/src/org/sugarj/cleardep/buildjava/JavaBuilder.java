@@ -97,11 +97,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	@Override
 	public None build() throws IOException {
 		try {
-			if (input.requiredUnits != null) {
-				for (BuildRequest<?,?,?,?> u : input.requiredUnits) {
-					requireBuild(u);
-				}
-			}
+			requireBuild(input.requiredUnits);
+			
 			for (Path p : input.inputFiles) {
 				require(p);
 			}
