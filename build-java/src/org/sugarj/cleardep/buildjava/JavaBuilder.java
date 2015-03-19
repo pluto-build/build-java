@@ -6,12 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.NotFoundException;
-import javassist.util.HotSwapper;
-
 import org.sugarj.cleardep.build.BuildRequest;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
@@ -21,14 +15,11 @@ import org.sugarj.cleardep.output.None;
 import org.sugarj.cleardep.stamp.LastModifiedStamper;
 import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.Log;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
 import org.sugarj.common.util.Pair;
-
-import com.sun.jdi.connect.IllegalConnectorArgumentsException;
 
 public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 
@@ -51,8 +42,6 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		public final List<BuildRequest<?, ?, ?, ?>> requiredUnits;
 		public final Boolean deepRequire;
 
-		public transient boolean noMetaDependency = false;
-
 		public Input(List<Path> inputFiles, Path targetDir,
 				List<Path> sourcePaths, List<Path> classPaths,
 				List<String> additionalArgs,
@@ -60,14 +49,12 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 				Boolean deepRequire) {
 			this.inputFiles = inputFiles;
 			this.targetDir = targetDir;
-			this.sourcePaths = sourcePaths != null ? sourcePaths
-					: new ArrayList<Path>();
-			this.classPaths = classPaths != null ? classPaths
-					: new ArrayList<Path>();
+			this.sourcePaths = sourcePaths != null ? sourcePaths : new ArrayList<Path>();
+			this.classPaths = classPaths   != null ? classPaths : new ArrayList<Path>();;
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
-			this.noMetaDependency = true;
+
 		}
 	}
 
@@ -83,21 +70,19 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	@Override
 	protected Path persistentPath() {
 		if (input.inputFiles.size() == 1) {
-			// return new RelativePath(input.targetDir,
-			// FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
-			return correspondingBinPath(input.inputFiles.get(0)
-					.replaceExtension("dep"));
+			//return new RelativePath(input.targetDir,
+			//		FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
+			return correspondingBinPath(input.inputFiles.get(0).replaceExtension("dep"));
 		}
 
 		int hash = Arrays.hashCode(input.inputFiles.toArray());
 
 		return new RelativePath(input.targetDir, "javaFiles" + hash + ".dep");
 	}
-
+	
 	private Path correspondingBinPath(Path srcFile) {
-		for (Path sourcePath : input.sourcePaths) {
-			RelativePath rel = FileCommands
-					.getRelativePath(sourcePath, srcFile);
+		for (Path sourcePath: input.sourcePaths) {
+			RelativePath rel = FileCommands.getRelativePath(sourcePath, srcFile);
 			if (rel != null)
 				return new RelativePath(input.targetDir, rel.getRelativePath());
 		}
@@ -112,8 +97,11 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	@Override
 	public None build() throws IOException {
 		try {
-			requireBuild(input.requiredUnits);
-
+			if (input.requiredUnits != null) {
+				for (BuildRequest<?,?,?,?> u : input.requiredUnits) {
+					requireBuild(u);
+				}
+			}
 			for (Path p : input.inputFiles) {
 				require(p);
 			}
@@ -122,24 +110,16 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					input.additionalArgs, input.classPaths);
 			for (Path outFile : outFiles.a) {
 				if (input.deepRequire) {
-					RelativePath relP = FileCommands.getRelativePath(
-							input.targetDir, outFile.replaceExtension("java"));
-
+					RelativePath relP = FileCommands.getRelativePath(input.targetDir, outFile.replaceExtension("java"));
+					
 					boolean found = false;
-					for (Path sourcePath : input.sourcePaths) {
-						RelativePath relSP = new RelativePath(sourcePath,
-								relP.getRelativePath());
+					for (Path sourcePath: input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
 						if (FileCommands.exists(relSP)) {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								Input newInput = new Input(
-										Arrays.asList((Path) relSP),
-										input.targetDir, input.sourcePaths,
-										input.classPaths, input.additionalArgs,
-										input.requiredUnits, input.deepRequire);
-								newInput.noMetaDependency = input.noMetaDependency;
-								requireBuild(JavaBuilder.factory, newInput);
+								requireBuild(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
@@ -151,82 +131,26 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 				}
 			}
 			for (Path p : outFiles.b) {
-				RelativePath relP = FileCommands.getRelativePath(
-						input.targetDir, p.replaceExtension("java"));
-
+				RelativePath relP = FileCommands.getRelativePath(input.targetDir, p.replaceExtension("java"));
+				
 				if (input.deepRequire && relP != null) {
 					boolean found = false;
 					if (relP != null)
-						for (Path sourcePath : input.sourcePaths) {
-							RelativePath relSP = new RelativePath(sourcePath,
-									relP.getRelativePath());
-							if (FileCommands.exists(relSP)) {
-								found = true;
-								if (!input.inputFiles.contains(relSP)) {
-									found = false;
-									Input newInput = new Input(
-											Arrays.asList((Path) relSP),
-											input.targetDir, input.sourcePaths,
-											input.classPaths,
-											input.additionalArgs,
-											input.requiredUnits,
-											input.deepRequire);
-									newInput.noMetaDependency = input.noMetaDependency;
-									requireBuild(JavaBuilder.factory, newInput);
-								}
-								break;
+					for (Path sourcePath: input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
+						if (FileCommands.exists(relSP)) {
+							found = true;
+							if (!input.inputFiles.contains(relSP)) {
+								found = false;
+								requireBuild(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
+							break;
 						}
+					}
 					if (found)
 						require(p);
 				} else {
 					require(p);
-				}
-			}
-
-			if (!input.noMetaDependency) {
-				try {
-					Log.log.log("Starting hotswap...", Log.CORE);
-					HotSwapper hs = new HotSwapper(8000);
-
-					ClassPool cp = ClassPool.getDefault();
-
-					for (Path p : input.inputFiles) {
-						RelativePath relPath = null;
-						for (Path sourcePath : input.sourcePaths) {
-							relPath = FileCommands.getRelativePath(sourcePath,
-									p);
-							if (relPath != null) {
-								break;
-							}
-						}
-
-						if (relPath == null)
-							throw new IOException(
-									"Could not determine full qualified name for "
-											+ p);
-
-						String fullQualifiedName = relPath.getRelativePath()
-								.split("\\.")[0].replace('/', '.');
-
-						CtClass cc = cp.get(fullQualifiedName);
-						byte[] byteCode = cc.toBytecode();// loadClassData("org.sugarj.cleardep.build.SomeClass");
-						hs.reload(fullQualifiedName, byteCode);
-						Log.log.log("Successfully hotswapped: "
-								+ fullQualifiedName, Log.CORE);
-					}
-				} catch (IOException | NullPointerException e) {
-					Log.log.log(
-							"Hotswap unsuccessful. Please start the instance with the jvm parameters -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000",
-							Log.CORE);
-					throw new IOException("Hotswap failed.");
-					//e.printStackTrace();
-				} catch (IllegalConnectorArgumentsException | NotFoundException | CannotCompileException | RuntimeException e) {
-					Log.log.log(
-							"Hotswap unsuccessful. Can only hotswap the implementation of a builder, if the methods and field signatures stay the same...\nRestart the build process to continue building...",
-							Log.CORE);
-					throw new IOException("Hotswap failed.");
-					//e.printStackTrace();
 				}
 			}
 		} catch (SourceCodeException e) {
