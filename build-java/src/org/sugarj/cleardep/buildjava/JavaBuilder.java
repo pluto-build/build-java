@@ -9,6 +9,7 @@ import java.util.List;
 import org.sugarj.cleardep.build.BuildRequest;
 import org.sugarj.cleardep.build.Builder;
 import org.sugarj.cleardep.build.BuilderFactory;
+import org.sugarj.cleardep.build.IMetaBuildingEnabled;
 import org.sugarj.cleardep.buildjava.util.JavaCommands;
 import org.sugarj.cleardep.buildjava.util.ListUtils;
 import org.sugarj.cleardep.output.None;
@@ -32,7 +33,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		}
 	};
 
-	public static class Input implements Serializable {
+	public static class Input implements Serializable, IMetaBuildingEnabled {
 		private static final long serialVersionUID = -8905198283548748809L;
 		public final List<Path> inputFiles;
 		public final Path targetDir;
@@ -55,6 +56,11 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
 
+		}
+
+		@Override
+		public void setMetaBuilding(boolean metaBuilding) {
+			// Do nothing for now... Implementation is currently only in the hotswap branch
 		}
 	}
 
