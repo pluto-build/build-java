@@ -111,18 +111,22 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			Pair<List<Path>, List<Path>> outFiles = JavaCommands.javac(
 					input.inputFiles, input.sourcePaths, input.targetDir,
 					input.additionalArgs, input.classPaths);
+
+			List<Path> filesToRequire = new ArrayList<Path>();
 			for (Path outFile : outFiles.a) {
 				if (input.deepRequire) {
-					RelativePath relP = FileCommands.getRelativePath(input.targetDir, outFile.replaceExtension("java"));
-					
+					RelativePath relP = FileCommands.getRelativePath(
+							input.targetDir, outFile.replaceExtension("java"));
+
 					boolean found = false;
-					for (Path sourcePath: input.sourcePaths) {
-						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
+					for (Path sourcePath : input.sourcePaths) {
+						RelativePath relSP = new RelativePath(sourcePath,
+								relP.getRelativePath());
 						if (FileCommands.exists(relSP)) {
 							found = true;
 							if (!input.inputFiles.contains(relSP)) {
 								found = false;
-								requireBuild(JavaBuilder.factory, new Input(Arrays.asList((Path)relSP), input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								filesToRequire.add(relSP);
 							}
 							break;
 						}
@@ -133,6 +137,14 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					provide(outFile);
 				}
 			}
+			for (Path p : filesToRequire) {
+				Input newInput = new Input(Arrays.asList((Path) p),
+						input.targetDir, input.sourcePaths, input.classPaths,
+						input.additionalArgs, input.requiredUnits,
+						input.deepRequire);
+				requireBuild(JavaBuilder.factory, newInput);
+			}
+
 			for (Path p : outFiles.b) {
 				RelativePath relP = FileCommands.getRelativePath(input.targetDir, p.replaceExtension("java"));
 				
