@@ -1,4 +1,4 @@
-package org.sugarj.cleardep.buildjava;
+package build.pluto.buildjava;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -6,18 +6,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.sugarj.cleardep.build.BuildRequest;
-import org.sugarj.cleardep.build.Builder;
-import org.sugarj.cleardep.build.BuilderFactory;
-import org.sugarj.cleardep.output.None;
-import org.sugarj.cleardep.stamp.LastModifiedStamper;
-import org.sugarj.cleardep.stamp.Stamper;
 import org.sugarj.common.Exec;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.StringCommands;
 import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.path.Path;
 import org.sugarj.common.path.RelativePath;
+
+import build.pluto.builder.BuildRequest;
+import build.pluto.builder.Builder;
+import build.pluto.builder.BuilderFactory;
+import build.pluto.output.None;
+import build.pluto.stamp.LastModifiedStamper;
+import build.pluto.stamp.Stamper;
 
 public class JavaJar extends Builder<JavaJar.Input, None> {
 
