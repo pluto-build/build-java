@@ -1,3 +1,4 @@
 language: java
-after_success: "mvn deploy"
+script: (cd build-java; mvn install) && (cd build-java-eclipse; mvn install)
+after_success: (cd build-java; mvn deploy) && (cd build-java-eclipse; mvn deploy)
 
