@@ -56,7 +56,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			this.inputFiles = inputFiles != null ? inputFiles : new Path[0];
 			this.targetDir = targetDir != null ? targetDir : new AbsolutePath(".");
 			this.sourcePaths = sourcePaths;
-			this.classPaths = classPaths != null ? classPaths : new Path[0];
+			this.classPaths = classPaths != null ? classPaths : new Path[]{this.targetDir};
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
