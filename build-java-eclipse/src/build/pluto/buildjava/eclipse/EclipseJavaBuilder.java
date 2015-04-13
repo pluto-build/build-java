@@ -2,7 +2,6 @@ package build.pluto.buildjava.eclipse;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -11,18 +10,16 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
-import build.pluto.builder.BuildManager;
-import build.pluto.builder.BuildRequest;
-import build.pluto.buildjava.eclipse.EclipseConsole;
-import build.pluto.buildjava.JavaBuilder;
-import build.pluto.buildjava.JavaBuilder.Input;
-import build.pluto.buildjava.eclipse.Environment;
-import build.pluto.buildjava.util.FileExtensionFilter;
-import build.pluto.buildjava.eclipse.SugarLangProjectEnvironment;
-import build.pluto.output.None;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
 import org.sugarj.common.path.Path;
+
+import build.pluto.builder.BuildManager;
+import build.pluto.builder.BuildRequest;
+import build.pluto.buildjava.JavaBuilder;
+import build.pluto.buildjava.JavaBuilder.Input;
+import build.pluto.buildjava.util.FileExtensionFilter;
+import build.pluto.output.None;
 
 /**
  * updates editors to show newly built results
@@ -78,8 +75,14 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		List<Input> inputs = new ArrayList<Input>();
 		
 		for (Path p: files) {
-			JavaBuilder.Input input = new Input(Arrays.asList(p), env.getBin(), env.getSourcePath(),
-					env.getIncludePath(), Arrays.asList("-source", env.getJavaComplianceLevel()), null, true);
+			JavaBuilder.Input input = new Input(
+					new Path[]{p},
+					env.getBin(), 
+					env.getSourcePath().toArray(new Path[0]),
+					env.getIncludePath().toArray(new Path[0]), 
+					new String[]{"-source", env.getJavaComplianceLevel()}, 
+					null, 
+					true);
 			inputs.add(input);
 		}
 
