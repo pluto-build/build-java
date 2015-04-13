@@ -4,3 +4,5 @@ script: (cd build-java; mvn deploy) && (cd build-java-eclipse; mvn deploy)
 cache:
   directories:
     - '$HOME/.m2/repository'
+
+jdk: oraclejdk8
