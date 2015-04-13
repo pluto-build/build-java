@@ -1,5 +1,5 @@
 sudo: false
-script: (cd build-java; mvn deploy) && (cd build-java-eclipse; mvn deploy)
+script: (cd build-java; mvn deploy -U) && (cd build-java-eclipse; mvn deploy -U)
 
 cache:
   directories:
