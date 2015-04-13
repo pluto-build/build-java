@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.errors.SourceCodeException;
@@ -39,8 +38,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		private static final long serialVersionUID = -8905198283548748809L;
 		public final Path[] inputFiles;
 		public final Path targetDir;
-		public final Path[] sourcePaths;
-		public final Path[] classPaths;
+		public final Path[] sourcePath;
+		public final Path[] classPath;
 		public final String[] additionalArgs;
 		public final BuildRequest<?, ?, ?, ?>[] requiredUnits;
 		public final Boolean deepRequire;
@@ -48,15 +47,15 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		public Input(
 				Path[] inputFiles, 
 				Path targetDir,
-				Path[] sourcePaths, 
-				Path[] classPaths,
+				Path[] sourcePath, 
+				Path[] classPath,
 				String[] additionalArgs,
 				BuildRequest<?, ?, ?, ?>[] requiredUnits,
 				Boolean deepRequire) {
 			this.inputFiles = inputFiles != null ? inputFiles : new Path[0];
 			this.targetDir = targetDir != null ? targetDir : new AbsolutePath(".");
-			this.sourcePaths = sourcePaths;
-			this.classPaths = classPaths != null ? classPaths : new Path[]{this.targetDir};
+			this.sourcePath = sourcePath;
+			this.classPath = classPath != null ? classPath : new Path[]{this.targetDir};
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
@@ -90,7 +89,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	}
 	
 	private Path correspondingBinPath(Path srcFile) {
-		for (Path sourcePath: input.sourcePaths) {
+		for (Path sourcePath: input.sourcePath) {
 			RelativePath rel = FileCommands.getRelativePath(sourcePath, srcFile);
 			if (rel != null)
 				return new RelativePath(input.targetDir, rel.getRelativePath());
@@ -113,8 +112,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 
 			List<Path> inputList = Arrays.asList(input.inputFiles);
 			Pair<List<Path>, List<Path>> outFiles = JavaCommands.javac(
-					input.inputFiles, input.sourcePaths, input.targetDir,
-					input.additionalArgs, input.classPaths);
+					input.inputFiles, input.sourcePath, input.targetDir,
+					input.additionalArgs, input.classPath);
 
 			List<Path> filesToRequire = new ArrayList<Path>();
 			for (Path outFile : outFiles.a) {
@@ -122,7 +121,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 					RelativePath relP = FileCommands.getRelativePath(input.targetDir, outFile.replaceExtension("java"));
 
 					boolean found = false;
-					for (Path sourcePath : input.sourcePaths) {
+					for (Path sourcePath : input.sourcePath) {
 						RelativePath relSP = new RelativePath(sourcePath,
 								relP.getRelativePath());
 						if (FileCommands.exists(relSP)) {
@@ -142,7 +141,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			}
 			for (Path p : filesToRequire) {
 				Input newInput = new Input(new Path[]{p},
-						input.targetDir, input.sourcePaths, input.classPaths,
+						input.targetDir, input.sourcePath, input.classPath,
 						input.additionalArgs, input.requiredUnits,
 						input.deepRequire);
 				requireBuild(JavaBuilder.factory, newInput);
@@ -154,13 +153,13 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 				if (input.deepRequire && relP != null) {
 					boolean found = false;
 					if (relP != null)
-					for (Path sourcePath: input.sourcePaths) {
+					for (Path sourcePath: input.sourcePath) {
 						RelativePath relSP = new RelativePath(sourcePath, relP.getRelativePath());
 						if (FileCommands.exists(relSP)) {
 							found = true;
 							if (!inputList.contains(relSP)) {
 								found = false;
-								requireBuild(JavaBuilder.factory, new Input(new Path[]{relSP}, input.targetDir, input.sourcePaths, input.classPaths, input.additionalArgs, input.requiredUnits, input.deepRequire));
+								requireBuild(JavaBuilder.factory, new Input(new Path[]{relSP}, input.targetDir, input.sourcePath, input.classPath, input.additionalArgs, input.requiredUnits, input.deepRequire));
 							}
 							break;
 						}
