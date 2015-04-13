@@ -42,7 +42,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		public final Path[] classPath;
 		public final String[] additionalArgs;
 		public final BuildRequest<?, ?, ?, ?>[] requiredUnits;
-		public final Boolean deepRequire;
+		public final boolean deepRequire;
 
 		public Input(
 				Path[] inputFiles, 
@@ -51,7 +51,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 				Path[] classPath,
 				String[] additionalArgs,
 				BuildRequest<?, ?, ?, ?>[] requiredUnits,
-				Boolean deepRequire) {
+				boolean deepRequire) {
 			this.inputFiles = inputFiles != null ? inputFiles : new Path[0];
 			this.targetDir = targetDir != null ? targetDir : new AbsolutePath(".");
 			this.sourcePath = sourcePath;
