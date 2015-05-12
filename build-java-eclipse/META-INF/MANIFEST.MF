@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.ui,
  org.sugarj.common,
  build.pluto.pluto,
  build.pluto.build-java
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Eclipse-RegisterBuddy: org.strategoxt.imp.runtime, org.sugarj.cleardep
 Export-Package: org.sugarj.cleardep.buildjava;

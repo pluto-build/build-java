@@ -1,9 +1,11 @@
 package build.pluto.buildjava.eclipse;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
@@ -12,9 +14,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
-import org.sugarj.common.path.Path;
 
-import build.pluto.builder.BuildManager;
+import build.pluto.builder.BuildManagers;
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.JavaBuilder;
 import build.pluto.buildjava.JavaBuilder.Input;
@@ -28,12 +29,11 @@ import build.pluto.output.None;
  */
 public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 
-	protected IProject[] build(int kind, Map<String, String> args,
-			IProgressMonitor monitor) {
+	protected IProject[] build(int kind, Map<String, String> args, IProgressMonitor monitor) {
 		System.out.println("Starting build...");
 
 		InitConsole();
-		
+
 		try {
 			List<JavaBuilder.Input> inputs = makeInputs(getProject());
 			@SuppressWarnings("unchecked")
@@ -43,9 +43,9 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 				reqs[i] = new BuildRequest<>(JavaBuilder.factory, input);
 				i++;
 			}
-			
-			BuildManager.buildAll(reqs);
-			
+
+			BuildManagers.buildAll(reqs);
+
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		} catch (CoreException e) {
 			e.printStackTrace();
@@ -54,7 +54,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		}
 		return null;
 	}
-	
+
 	private void InitConsole() {
 		Log.out = EclipseConsole.getOutputPrintStream();
 		Log.err = EclipseConsole.getErrorPrintStream();
@@ -65,26 +65,12 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 	private List<Input> makeInputs(IProject project) throws JavaModelException {
 		Environment env = SugarLangProjectEnvironment.makeProjectEnvironment(project);
 
-		List<Path> files = new ArrayList<Path>();
-		for (Path sp: env.getSourcePath()) {
-			for (Path p: FileCommands.listFilesRecursive(sp, new FileExtensionFilter("java"))) {
-				files.add(p);
-			}
-		}
-		
-		List<Input> inputs = new ArrayList<Input>();
-		
-		for (Path p: files) {
-			JavaBuilder.Input input = new Input(
-					new Path[]{p},
-					env.getBin(), 
-					env.getSourcePath().toArray(new Path[0]),
-					env.getIncludePath().toArray(new Path[0]), 
-					new String[]{"-source", env.getJavaComplianceLevel()}, 
-					null, 
-					true);
-			inputs.add(input);
-		}
+		Stream<File> files = env.getSourcePath().stream()
+				.flatMap((org.sugarj.common.path.Path sp) -> FileCommands.streamFiles(sp.getFile(), new FileExtensionFilter("java")));
+
+		List<Input> inputs = files.map(
+				(File p) -> new JavaBuilder.Input(new File[] { p }, env.getBin().getFile(), env.getSourcePath().toArray(new File[0]), env.getIncludePath()
+						.toArray(new File[0]), new String[] { "-source", env.getJavaComplianceLevel() }, null, true)).collect(Collectors.toList());
 
 		return inputs;
 	}
@@ -92,11 +78,11 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 	protected void clean(IProgressMonitor monitor) throws CoreException {
 		System.out.println("Starting clean...");
 		InitConsole();
-		
+
 		Log.log.beginTask("Starting clean", Log.ALWAYS);
-		
+
 		Environment env = SugarLangProjectEnvironment.makeProjectEnvironment(getProject());
-	
+
 		try {
 			FileCommands.delete(env.getBin());
 			FileCommands.createDir(env.getBin());
@@ -105,7 +91,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 			Log.err.println("Clean failed...");
 		}
 		monitor.done();
-		
+
 		Log.log.endTask();
 	}
 }

@@ -13,7 +13,6 @@ import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.AbsolutePath;
-import org.sugarj.common.path.Path;
 import org.sugarj.common.util.Pair;
 
 /**
@@ -29,12 +28,8 @@ public class JavaCommands {
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
-	public static Pair<List<Path>, List<Path>> javac(
-			Path[] sourceFiles,
-			Path[] sourcePaths, 
-			Path dir, 
-			String[] additionalArguments,
-			Path[] cp) throws IOException, SourceCodeException {
+	public static Pair<List<File>, List<File>> javac(File[] sourceFiles, File[] sourcePaths, File dir, String[] additionalArguments, File[] cp)
+			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
 		for (int i = 0; i < cp.length; i++) {
@@ -48,11 +43,9 @@ public class JavaCommands {
 
 		cpBuilder.append(dir);
 
-		int argNum = 7
-				+ (sourcePaths == null || sourcePaths.length  == 0 ? 0 : 2)
-				+ (additionalArguments != null ? additionalArguments.length : 0);
+		int argNum = 7 + (sourcePaths == null || sourcePaths.length == 0 ? 0 : 2) + (additionalArguments != null ? additionalArguments.length : 0);
 		int next = 0;
-		
+
 		String[] cmd = new String[argNum + sourceFiles.length];
 		cmd[next++] = "javac";
 		cmd[next++] = "-cp";
@@ -63,7 +56,7 @@ public class JavaCommands {
 		cmd[next++] = "-verbose";
 		if (sourcePaths != null && sourcePaths.length > 0) {
 			StringBuilder spBuilder = new StringBuilder();
-			for (Path sp : sourcePaths)
+			for (File sp : sourcePaths)
 				spBuilder.append(sp.getAbsolutePath()).append(File.pathSeparator);
 			String sp = spBuilder.toString();
 
@@ -78,38 +71,38 @@ public class JavaCommands {
 		for (int i = 0; i < sourceFiles.length; i++)
 			cmd[i + next] = FileCommands.toWindowsPath(sourceFiles[i].getAbsolutePath());
 
-//		String stdOut;
+		// String stdOut;
 		String errOut;
 		boolean ok = false;
 		try {
-			ExecutionResult  result = Exec.run(cmd);
+			ExecutionResult result = Exec.run(cmd);
 			ok = true;
-//			stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
+			// stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
 			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
 		} catch (ExecutionError e) {
-//		  stdOut = StringCommands.printListSeparated(e.outMsgs, "\n");
-		  errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
+			// stdOut = StringCommands.printListSeparated(e.outMsgs, "\n");
+			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
-		
+
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
 			if (!errors.isEmpty())
 				throw new SourceCodeException(errors);
 		}
 
-		List<Path> generatedFiles = extractGeneratedFiles(errOut);
-		List<Path> dependentFiles = extractDependentFiles(errOut);
+		List<File> generatedFiles = extractGeneratedFiles(errOut);
+		List<File> dependentFiles = extractDependentFiles(errOut);
 
-		return new Pair<List<Path>, List<Path>>(generatedFiles, dependentFiles);
+		return new Pair<>(generatedFiles, dependentFiles);
 	}
 
 	private final static String ERR_PAT = ": error: ";
-//	private final static String LINE_PAT = "(at line ";
+	// private final static String LINE_PAT = "(at line ";
 	private final static String GEN_PAT = "[wrote";
 	private final static String DEP_PAT = "[loading";
 
-	private static List<Path> extractGeneratedFiles(String errOut) {
-		List<Path> generatedFiles = new LinkedList<Path>();
+	private static List<File> extractGeneratedFiles(String errOut) {
+		List<File> generatedFiles = new LinkedList<>();
 		int index = 0;
 		while ((index = errOut.indexOf(GEN_PAT, index)) >= 0) {
 			index += GEN_PAT.length();
@@ -118,13 +111,13 @@ public class JavaCommands {
 			index++;
 			int to = errOut.indexOf(']', index);
 			String generatedPath = errOut.substring(index, to);
-			generatedFiles.add(new AbsolutePath(generatedPath));
+			generatedFiles.add(new File(generatedPath));
 		}
 		return generatedFiles;
 	}
-	
-	private static List<Path> extractDependentFiles(String errOut) {
-		List<Path> generatedFiles = new LinkedList<Path>();
+
+	private static List<File> extractDependentFiles(String errOut) {
+		List<File> generatedFiles = new LinkedList<>();
 		int index = 0;
 		while ((index = errOut.indexOf(DEP_PAT, index)) >= 0) {
 			index += DEP_PAT.length();
@@ -134,12 +127,12 @@ public class JavaCommands {
 			int to = errOut.indexOf(']', index);
 			String generatedPath = errOut.substring(index, to);
 			if (generatedPath.contains(".sym")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".sym")+4);
+				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".sym") + 4);
 			}
 			if (generatedPath.contains(".jar")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".jar")+4);
+				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".jar") + 4);
 			}
-			Path file = new AbsolutePath(generatedPath);
+			File file = new File(generatedPath);
 			if (!generatedFiles.contains(file))
 				generatedFiles.add(file);
 		}
@@ -153,25 +146,25 @@ public class JavaCommands {
 		List<Pair<SourceLocation, String>> errors = new LinkedList<Pair<SourceLocation, String>>();
 		int index = 0;
 		while ((index = s.indexOf(ERR_PAT, index)) >= 0) {
-			int lineStart = index-1;
+			int lineStart = index - 1;
 			while (s.charAt(lineStart) != ':')
 				lineStart--;
-			int line = Integer.parseInt(s.substring(lineStart+1, index));
-			int fileStart = lineStart-1;
+			int line = Integer.parseInt(s.substring(lineStart + 1, index));
+			int fileStart = lineStart - 1;
 			while (s.charAt(fileStart) != '\n')
 				fileStart--;
 
-			String file = s.substring(fileStart+1, lineStart);
+			String file = s.substring(fileStart + 1, lineStart);
 			index += ERR_PAT.length();
 			int errorEnd = s.indexOf("\n", index);
 			String msg = s.substring(index, errorEnd);
-			
+
 			int columnLineStart = s.indexOf("\n", s.indexOf("\n", errorEnd));
 			int columnSignIndex = s.indexOf("^", columnLineStart);
 			int colStart = columnSignIndex - columnLineStart;
-			
+
 			int end = s.indexOf("\n", columnSignIndex);
-			
+
 			errors.add(Pair.create(new SourceLocation(new AbsolutePath(file), line, line, colStart, colStart), msg));
 			index = end + 1;
 		}
