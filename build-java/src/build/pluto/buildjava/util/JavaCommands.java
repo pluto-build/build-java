@@ -28,25 +28,22 @@ public class JavaCommands {
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
-	public static Pair<List<File>, List<File>> javac(File[] sourceFiles, File[] sourcePaths, File dir, String[] additionalArguments, File[] cp)
+	public static Pair<List<File>, List<File>> javac(List<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
-		for (int i = 0; i < cp.length; i++) {
-			cpBuilder.append(FileCommands.toWindowsPath(cp[i].getAbsolutePath()));
-			if (i < cp.length - 1)
-				cpBuilder.append(File.pathSeparator);
-		}
+		cpBuilder
+				.append(cp.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).reduce((String s1, String s2) -> s1 + File.pathSeparator + s2));
 
-		if (cp.length > 0)
+		if (!cp.isEmpty())
 			cpBuilder.append(File.pathSeparator);
 
 		cpBuilder.append(dir);
 
-		int argNum = 7 + (sourcePaths == null || sourcePaths.length == 0 ? 0 : 2) + (additionalArguments != null ? additionalArguments.length : 0);
+		int argNum = 7 + (sourcePaths == null || sourcePaths.size() == 0 ? 0 : 2) + (additionalArguments != null ? additionalArguments.length : 0);
 		int next = 0;
 
-		String[] cmd = new String[argNum + sourceFiles.length];
+		String[] cmd = new String[argNum + sourceFiles.size()];
 		cmd[next++] = "javac";
 		cmd[next++] = "-cp";
 		cmd[next++] = cpBuilder.toString();
@@ -54,7 +51,7 @@ public class JavaCommands {
 		cmd[next++] = FileCommands.toWindowsPath(dir.getAbsolutePath());
 		cmd[next++] = "-nowarn";
 		cmd[next++] = "-verbose";
-		if (sourcePaths != null && sourcePaths.length > 0) {
+		if (sourcePaths != null && sourcePaths.size() > 0) {
 			StringBuilder spBuilder = new StringBuilder();
 			for (File sp : sourcePaths)
 				spBuilder.append(sp.getAbsolutePath()).append(File.pathSeparator);
@@ -68,8 +65,8 @@ public class JavaCommands {
 			for (String arg : additionalArguments)
 				cmd[next++] = arg;
 
-		for (int i = 0; i < sourceFiles.length; i++)
-			cmd[i + next] = FileCommands.toWindowsPath(sourceFiles[i].getAbsolutePath());
+		for (int i = 0; i < sourceFiles.size(); i++)
+			cmd[i + next] = FileCommands.toWindowsPath(sourceFiles.get(i).getAbsolutePath());
 
 		// String stdOut;
 		String errOut;

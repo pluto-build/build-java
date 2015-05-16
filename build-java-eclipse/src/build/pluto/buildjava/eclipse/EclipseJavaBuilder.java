@@ -2,8 +2,10 @@ package build.pluto.buildjava.eclipse;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,6 +16,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
+import org.sugarj.common.path.Path;
 
 import build.pluto.builder.BuildManagers;
 import build.pluto.builder.BuildRequest;
@@ -68,9 +71,13 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		Stream<File> files = env.getSourcePath().stream()
 				.flatMap((org.sugarj.common.path.Path sp) -> FileCommands.streamFiles(sp.getFile(), new FileExtensionFilter("java")));
 
+		Function<List<Path>, List<File>> toFileList = (List<Path> p) -> p.stream().map(Path::getFile).collect(Collectors.<File> toList());
+
 		List<Input> inputs = files.map(
-				(File p) -> new JavaBuilder.Input(new File[] { p }, env.getBin().getFile(), env.getSourcePath().toArray(new File[0]), env.getIncludePath()
-						.toArray(new File[0]), new String[] { "-source", env.getJavaComplianceLevel() }, null, true)).collect(Collectors.toList());
+				(File p) -> new JavaBuilder.Input(Collections.singletonList(p), env.getBin().getFile(), toFileList.apply(env.getSourcePath()), toFileList
+						.apply(env.getIncludePath())
+,
+						new String[] { "-source", env.getJavaComplianceLevel() }, (BuildRequest<?, ?, ?, ?>[]) null, true)).collect(Collectors.toList());
 
 		return inputs;
 	}

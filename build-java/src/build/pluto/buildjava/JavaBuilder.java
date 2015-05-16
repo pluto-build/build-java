@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.sugarj.common.FileCommands;
@@ -28,20 +28,21 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 
 	public static class Input implements Serializable, IMetaBuildingEnabled {
 		private static final long serialVersionUID = -8905198283548748809L;
-		public final File[] inputFiles;
+		public final List<File> inputFiles;
 		public final File targetDir;
-		public final File[] sourcePath;
-		public final File[] classPath;
+		public final List<File> sourcePath;
+		public final List<File> classPath;
 		public final String[] additionalArgs;
 		public final BuildRequest<?, ?, ?, ?>[] requiredUnits;
 		public final boolean deepRequire;
 
-		public Input(File[] inputFiles, File targetDir, File[] sourcePath, File[] classPath, String[] additionalArgs, BuildRequest<?, ?, ?, ?>[] requiredUnits,
+		public Input(List<File> inputFiles, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
+				BuildRequest<?, ?, ?, ?>[] requiredUnits,
 				boolean deepRequire) {
-			this.inputFiles = inputFiles != null ? inputFiles : new File[0];
+			this.inputFiles = inputFiles != null ? inputFiles : Collections.emptyList();
 			this.targetDir = targetDir != null ? targetDir : new File(".");
 			this.sourcePath = sourcePath;
-			this.classPath = classPath != null ? classPath : new File[] { this.targetDir };
+			this.classPath = classPath != null ? classPath : Collections.singletonList(this.targetDir);
 			this.additionalArgs = additionalArgs;
 			this.requiredUnits = requiredUnits;
 			this.deepRequire = deepRequire;
@@ -60,18 +61,18 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 
 	@Override
 	protected String description(Input input) {
-		return "Compile Java files " + Arrays.toString(input.inputFiles);
+		return "Compile Java files " + input.inputFiles.toString();
 	}
 
 	@Override
 	protected File persistentPath(Input input) {
-		if (input.inputFiles.length == 1) {
+		if (input.inputFiles.size() == 1) {
 			// return new RelativePath(input.targetDir,
 			// FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
-			return correspondingBinPath(FileCommands.replaceExtension(input.inputFiles[0], "dep"), input);
+			return correspondingBinPath(FileCommands.replaceExtension(input.inputFiles.get(0), "dep"), input);
 		}
 
-		int hash = Arrays.hashCode(input.inputFiles);
+		int hash = input.inputFiles.hashCode();
 		return new File(input.targetDir, "pluto.build.java-" + hash + ".dep");
 	}
 
@@ -97,7 +98,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			for (File p : input.inputFiles)
 				require(p);
 
-			List<File> inputList = Arrays.asList(input.inputFiles);
+			List<File> inputList = input.inputFiles;
 			Pair<List<File>, List<File>> outFiles = JavaCommands.javac(input.inputFiles, input.sourcePath, input.targetDir, input.additionalArgs,
 					input.classPath);
 
@@ -125,7 +126,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 				}
 			}
 			for (File p : filesToRequire) {
-				Input newInput = new Input(new File[] { p }, input.targetDir, input.sourcePath, input.classPath, input.additionalArgs, input.requiredUnits,
+				Input newInput = new Input(Collections.singletonList(p), input.targetDir, input.sourcePath, input.classPath, input.additionalArgs,
+						input.requiredUnits,
 						input.deepRequire);
 				requireBuild(JavaBuilder.factory, newInput);
 			}
@@ -142,7 +144,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 								found = true;
 								if (!inputList.contains(relSP)) {
 									found = false;
-									requireBuild(JavaBuilder.factory, new Input(new File[] { relSP }, input.targetDir, input.sourcePath, input.classPath,
+									requireBuild(JavaBuilder.factory, new Input(Collections.singletonList(relSP), input.targetDir, input.sourcePath,
+											input.classPath,
 											input.additionalArgs, input.requiredUnits, input.deepRequire));
 								}
 								break;

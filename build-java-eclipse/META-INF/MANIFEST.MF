@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: build-java-eclipse
 Bundle-SymbolicName: build.pluto.buildjava.eclipse;singleton:=true
 Bundle-Version: 1.1.0.qualifier
-Bundle-Activator: org.sugarj.cleardep.buildjava.Activator
+Bundle-Activator: build.pluto.buildjava.eclipse.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -13,8 +13,14 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.console,
  org.sugarj.common,
  build.pluto.pluto,
- build.pluto.build-java
+ build.pluto.build-java,
+ build.pluto.pluto-eclipse;bundle-version="1.2.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Eclipse-RegisterBuddy: org.strategoxt.imp.runtime, org.sugarj.cleardep
-Export-Package: build.pluto.buildjava.eclipse
+Export-Package: build.pluto.buildjava.eclipse;
+  uses:="org.osgi.framework,
+   org.eclipse.core.runtime,
+   org.eclipse.core.resources,
+   org.sugarj.common.path,
+   org.eclipse.ui.plugin"
