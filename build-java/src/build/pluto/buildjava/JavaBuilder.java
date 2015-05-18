@@ -24,7 +24,7 @@ import build.pluto.stamp.Stamper;
 
 public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 
-	public static BuilderFactory<Input, None, JavaBuilder> factory = JavaBuilder::new;
+	public static BuilderFactory<Input, None, JavaBuilder> factory = BuilderFactory.of(JavaBuilder.class, Input.class);
 
 	public static class Input implements Serializable, IMetaBuildingEnabled {
 		private static final long serialVersionUID = -8905198283548748809L;

@@ -21,7 +21,7 @@ import build.pluto.stamp.Stamper;
 
 public class JavaJar extends Builder<JavaJar.Input, None> {
 
-	public static BuilderFactory<Input, None, JavaJar> factory = JavaJar::new;
+	public static BuilderFactory<Input, None, JavaJar> factory = BuilderFactory.of(JavaJar.class, Input.class);
 
 	public static enum Mode {
 		Create, List, Extract, Update, GenIndex, CreateOrUpdate;
