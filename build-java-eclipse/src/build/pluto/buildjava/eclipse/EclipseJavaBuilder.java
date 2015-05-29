@@ -75,9 +75,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 
 		List<Input> inputs = files.map(
 				(File p) -> new JavaBuilder.Input(Collections.singletonList(p), env.getBin().getFile(), toFileList.apply(env.getSourcePath()), toFileList
-						.apply(env.getIncludePath())
-,
-						new String[] { "-source", env.getJavaComplianceLevel() }, (BuildRequest<?, ?, ?, ?>[]) null, true)).collect(Collectors.toList());
+						.apply(env.getIncludePath()), new String[] { "-source", env.getJavaComplianceLevel() }, null, true)).collect(Collectors.toList());
 
 		return inputs;
 	}
