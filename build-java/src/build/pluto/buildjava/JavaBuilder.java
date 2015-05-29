@@ -33,18 +33,18 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		public final List<File> sourcePath;
 		public final List<File> classPath;
 		public final String[] additionalArgs;
-		public final BuildRequest<?, ?, ?, ?>[] requiredUnits;
+		public final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
 		public final boolean deepRequire;
 
 		public Input(List<File> inputFiles, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
-				BuildRequest<?, ?, ?, ?>[] requiredUnits,
+				List<BuildRequest<?, ?, ?, ?>> requiredUnits,
 				boolean deepRequire) {
 			this.inputFiles = inputFiles != null ? inputFiles : Collections.emptyList();
 			this.targetDir = targetDir != null ? targetDir : new File(".");
 			this.sourcePath = sourcePath;
 			this.classPath = classPath != null ? classPath : Collections.singletonList(this.targetDir);
 			this.additionalArgs = additionalArgs;
-			this.requiredUnits = requiredUnits;
+			this.injectedDependencies = requiredUnits;
 			this.deepRequire = deepRequire;
 		}
 
@@ -55,7 +55,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 		}
 	}
 
-	private JavaBuilder(Input input) {
+	public JavaBuilder(Input input) {
 		super(input);
 	}
 
@@ -93,7 +93,8 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	@Override
 	public None build(Input input) throws IOException {
 		try {
-			requireBuild(input.requiredUnits);
+			System.out.println("Ibjected dependencies " + input.injectedDependencies);
+			requireBuild(input.injectedDependencies);
 
 			for (File p : input.inputFiles)
 				require(p);
@@ -127,7 +128,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			}
 			for (File p : filesToRequire) {
 				Input newInput = new Input(Collections.singletonList(p), input.targetDir, input.sourcePath, input.classPath, input.additionalArgs,
-						input.requiredUnits,
+						input.injectedDependencies,
 						input.deepRequire);
 				requireBuild(JavaBuilder.factory, newInput);
 			}
@@ -146,7 +147,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 									found = false;
 									requireBuild(JavaBuilder.factory, new Input(Collections.singletonList(relSP), input.targetDir, input.sourcePath,
 											input.classPath,
-											input.additionalArgs, input.requiredUnits, input.deepRequire));
+											input.additionalArgs, input.injectedDependencies, input.deepRequire));
 								}
 								break;
 							}

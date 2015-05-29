@@ -85,7 +85,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		}
 	}
 
-	private JavaJar(Input input) {
+	public JavaJar(Input input) {
 		super(input);
 	}
 
@@ -144,11 +144,12 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 
 		for (File classpath : input.files.keySet()) {
 			Set<File> files = input.files.get(classpath);
-
-			args.add("-C");
-			args.add(classpath.getAbsolutePath());
-			for (File f : files) {
-				args.add(FileCommands.getRelativePath(classpath, f).toString());
+			if (!files.isEmpty()) {
+				args.add("-C");
+				args.add(classpath.getAbsolutePath());
+				for (File f : files) {
+					args.add(FileCommands.getRelativePath(classpath, f).toString());
+				}
 			}
 		}
 

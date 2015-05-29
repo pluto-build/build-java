@@ -32,8 +32,8 @@ public class JavaCommands {
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
-		cpBuilder
-				.append(cp.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).reduce((String s1, String s2) -> s1 + File.pathSeparator + s2));
+		cpBuilder.append(cp.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).reduce((String s1, String s2) -> s1 + File.pathSeparator + s2)
+				.orElse(""));
 
 		if (!cp.isEmpty())
 			cpBuilder.append(File.pathSeparator);
