@@ -4,6 +4,7 @@ Bundle-Name: Build-java
 Bundle-SymbolicName: org.sugarj.cleardep.buildjava;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: org.sugarj.cleardep.buildjava.Activator
+Eclipse-BundleShape: dir
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
