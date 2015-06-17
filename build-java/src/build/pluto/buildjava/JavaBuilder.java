@@ -93,7 +93,7 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	@Override
 	public None build(Input input) throws IOException {
 		try {
-			System.out.println("Ibjected dependencies " + input.injectedDependencies);
+			System.out.println("Injected dependencies " + input.injectedDependencies);
 			requireBuild(input.injectedDependencies);
 
 			for (File p : input.inputFiles)
