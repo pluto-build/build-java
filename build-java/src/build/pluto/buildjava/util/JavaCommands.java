@@ -2,6 +2,7 @@ package build.pluto.buildjava.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,10 +26,16 @@ import org.sugarj.common.util.Pair;
  */
 public class JavaCommands {
 
+	public static class JavacResult {
+		public List<File> generatedFiles;
+		public List<File> loadedFiles;
+
+	}
+
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
-	public static Pair<List<File>, List<File>> javac(List<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
+	public static JavacResult javac(List<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
@@ -40,39 +47,38 @@ public class JavaCommands {
 
 		cpBuilder.append(dir);
 
-		int argNum = 7 + (sourcePaths == null || sourcePaths.size() == 0 ? 0 : 2) + (additionalArguments != null ? additionalArguments.length : 0);
-		int next = 0;
+		List<String> cmd = new ArrayList<>();
 
-		String[] cmd = new String[argNum + sourceFiles.size()];
-		cmd[next++] = "javac";
-		cmd[next++] = "-cp";
-		cmd[next++] = cpBuilder.toString();
-		cmd[next++] = "-d";
-		cmd[next++] = FileCommands.toWindowsPath(dir.getAbsolutePath());
-		cmd[next++] = "-nowarn";
-		cmd[next++] = "-verbose";
+		cmd.add("javac");
+		cmd.add("-cp");
+		cmd.add(cpBuilder.toString());
+		cmd.add("-d");
+		cmd.add(FileCommands.toWindowsPath(dir.getAbsolutePath()));
+		cmd.add("-nowarn");
+		cmd.add("-verbose");
+		cmd.add("-implicit:none");
 		if (sourcePaths != null && sourcePaths.size() > 0) {
 			StringBuilder spBuilder = new StringBuilder();
 			for (File sp : sourcePaths)
 				spBuilder.append(sp.getAbsolutePath()).append(File.pathSeparator);
 			String sp = spBuilder.toString();
 
-			cmd[next++] = "-sourcepath";
-			cmd[next++] = sp.substring(0, sp.length() - 1);
+			cmd.add("-sourcepath");
+			cmd.add(sp.substring(0, sp.length() - 1));
 		}
 
 		if (additionalArguments != null)
 			for (String arg : additionalArguments)
-				cmd[next++] = arg;
+				cmd.add(arg);
 
 		for (int i = 0; i < sourceFiles.size(); i++)
-			cmd[i + next] = FileCommands.toWindowsPath(sourceFiles.get(i).getAbsolutePath());
+			cmd.add(FileCommands.toWindowsPath(sourceFiles.get(i).getAbsolutePath()));
 
 		// String stdOut;
 		String errOut;
 		boolean ok = false;
 		try {
-			ExecutionResult result = Exec.run(cmd);
+			ExecutionResult result = Exec.run(cmd.toArray(new String[cmd.size()]));
 			ok = true;
 			// stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
 			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
@@ -90,7 +96,11 @@ public class JavaCommands {
 		List<File> generatedFiles = extractGeneratedFiles(errOut);
 		List<File> dependentFiles = extractDependentFiles(errOut);
 
-		return new Pair<>(generatedFiles, dependentFiles);
+		JavacResult result = new JavacResult();
+		result.generatedFiles = generatedFiles;
+		result.loadedFiles = dependentFiles;
+
+		return result;
 	}
 
 	private final static String ERR_PAT = ": error: ";
