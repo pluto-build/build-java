@@ -17,7 +17,6 @@ import org.sugarj.common.FileCommands;
 import org.sugarj.common.Log;
 import org.sugarj.common.path.Path;
 
-import build.pluto.builder.BuildCycleAtOnceBuilder;
 import build.pluto.builder.BuildManagers;
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.JavaBuilder;
@@ -40,8 +39,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		try {
 			Stream<JavaInput> inputs = makeInputs(getProject());
 
-			Iterable<BuildRequest<?, None, ?, ?>> requests = inputs.map(
-					(JavaInput input) -> new BuildRequest<>(JavaBuilder.factory, BuildCycleAtOnceBuilder.singletonArrayList(input))).collect(
+			Iterable<BuildRequest<?, None, ?, ?>> requests = inputs.map(JavaBuilder::request).collect(
 					Collectors.toList());
 
 			BuildManagers.buildAll(requests);

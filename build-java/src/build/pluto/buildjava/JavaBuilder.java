@@ -51,6 +51,10 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	}
 
+	public static BuildRequest<ArrayList<JavaInput>, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> request(JavaInput input) {
+		return new BuildRequest<>(factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
+	}
+
 	public JavaBuilder(ArrayList<JavaInput> input) {
 		super(input, factory);
 	}
@@ -116,7 +120,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		StreamCommands.TrowableConsumer<File> requireJavaBuild = (File sourceFile) -> {
 			if (FileCommands.exists(sourceFile)) {
 				if (!inputFiles.contains(sourceFile)) {
-					requireBuild(JavaBuilder.factory, BuildCycleAtOnceBuilder.singletonArrayList(new JavaInput(sourceFile, targetDir, sourcePaths, classPath,
+					requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath,
 							additionalArgs, injectedDependencies)));
 				}
 			}
