@@ -2,6 +2,7 @@ package build.pluto.buildjava.eclipse;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +41,9 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		try {
 			List<JavaBuilder.Input> inputs = makeInputs(getProject());
 			@SuppressWarnings("unchecked")
-			BuildRequest<?, None, ?, ?>[] reqs = (BuildRequest<?, None, ?, ?>[]) new BuildRequest[inputs.size()];
-			int i = 0;
-			for (Input input : inputs) {
-				reqs[i] = new BuildRequest<>(JavaBuilder.factory, input);
-				i++;
-			}
+			List<BuildRequest<?, None, ?, ?>> reqs = new ArrayList<>();
+			for (Input input : inputs)
+				reqs.add(new BuildRequest<>(JavaBuilder.factory, input));
 
 			BuildManagers.buildAll(reqs);
 
