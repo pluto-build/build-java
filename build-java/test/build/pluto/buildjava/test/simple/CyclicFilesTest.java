@@ -8,7 +8,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.Log;
 
 import build.pluto.buildjava.JavaBuilder;
 import build.pluto.buildjava.JavaInput;
@@ -51,7 +50,6 @@ public class CyclicFilesTest extends ScopedBuildTest {
 	@Test
 	public void testCleanRebuildDoesNothing() throws IOException {
 		build();
-		Log.log.setLoggingLevel(Log.ALWAYS);
 		TrackingBuildManager manager = build();
 		assertEquals(0, manager.getExecutedInputs().size());
 	}
