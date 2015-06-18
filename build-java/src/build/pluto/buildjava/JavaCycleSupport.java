@@ -7,7 +7,6 @@ import build.pluto.builder.BuildAtOnceCycleSupport;
 import build.pluto.builder.BuildCycle;
 import build.pluto.builder.BuildRequest;
 import build.pluto.builder.BuilderFactory;
-import build.pluto.buildjava.JavaBuilder.Input;
 import build.pluto.output.None;
 
 /**
@@ -17,13 +16,14 @@ import build.pluto.output.None;
  *
  */
 public class JavaCycleSupport extends
-		BuildAtOnceCycleSupport<JavaBuilder.Input, None, JavaBuilder, BuilderFactory<ArrayList<JavaBuilder.Input>, None, JavaBuilder>> {
+		BuildAtOnceCycleSupport<JavaInput, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> {
 
-	protected JavaCycleSupport(BuildCycle cycle, BuilderFactory<ArrayList<Input>, None, JavaBuilder> builderFactory) {
+	protected JavaCycleSupport(BuildCycle cycle, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> builderFactory) {
 		super(cycle, builderFactory);
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean canBuildCycle() {
 		if (!super.canBuildCycle()) {
 			return false;
@@ -31,14 +31,14 @@ public class JavaCycleSupport extends
 		// Java builder needs not only all components in the cycle be a java
 		// compilation task, but also that they have same compiler args and
 		// target directory
-		JavaBuilder.Input initialInput = (JavaBuilder.Input) this.cycle.getInitial().input;
+		JavaInput initialInput = ((ArrayList<JavaInput>) this.cycle.getInitial().input).get(0);
 		return this.cycle
 				.getCycleComponents()
 				.stream()
-				.map((BuildRequest<?, ?, ?, ?> r) -> (JavaBuilder.Input) r.input)
+				.flatMap((BuildRequest<?, ?, ?, ?> r) -> ((ArrayList<JavaInput>) r.input).stream())
 				.allMatch(
-						(JavaBuilder.Input otherInput) -> otherInput.targetDir.equals(initialInput.targetDir)
-								&& Arrays.equals(otherInput.additionalArgs, initialInput.additionalArgs));
+						(JavaInput otherInput) -> otherInput.getTargetDir().equals(initialInput.getTargetDir())
+								&& Arrays.equals(otherInput.getAdditionalArgs(), initialInput.getAdditionalArgs()));
 	}
 
 }
