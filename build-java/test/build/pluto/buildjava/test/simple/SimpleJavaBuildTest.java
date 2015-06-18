@@ -18,7 +18,7 @@ import com.google.common.io.Files;
 
 public class SimpleJavaBuildTest extends ScopedBuildTest {
 
-	@ScopedPath(value = ".")
+	@ScopedPath(value = "")
 	private File sourcePath;
 
 	@ScopedPath(value = "A.java")

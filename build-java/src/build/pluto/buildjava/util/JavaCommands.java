@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.sugarj.common.Exec;
 import org.sugarj.common.Exec.ExecutionError;
@@ -32,6 +33,10 @@ public class JavaCommands {
 
 	}
 
+	private static String concatWithPathSeparator(String s1, String s2) {
+		return s1 + File.pathSeparator + s2;
+	}
+
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
@@ -39,17 +44,20 @@ public class JavaCommands {
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
-		cpBuilder.append(cp.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).reduce((String s1, String s2) -> s1 + File.pathSeparator + s2)
-				.orElse(""));
+		String classpath = Stream.concat(Stream.of(dir), cp.stream()).map(File::getAbsolutePath).map(FileCommands::toWindowsPath).distinct()
+				.reduce(JavaCommands::concatWithPathSeparator).orElse("");
+		cpBuilder.append(classpath);
 
-		if (!cp.isEmpty())
-			cpBuilder.append(File.pathSeparator);
-
-		cpBuilder.append(dir);
 
 		List<String> cmd = new ArrayList<>();
 
 		cmd.add("javac");
+		if (sourcePaths != null && sourcePaths.size() > 0) {
+			String sourcepath = sourcePaths.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).distinct()
+					.reduce(JavaCommands::concatWithPathSeparator).get();
+			cmd.add("-sourcepath");
+			cmd.add(sourcepath);
+		}
 		cmd.add("-cp");
 		cmd.add(cpBuilder.toString());
 		cmd.add("-d");
@@ -57,15 +65,7 @@ public class JavaCommands {
 		cmd.add("-nowarn");
 		cmd.add("-verbose");
 		cmd.add("-implicit:none");
-		if (sourcePaths != null && sourcePaths.size() > 0) {
-			StringBuilder spBuilder = new StringBuilder();
-			for (File sp : sourcePaths)
-				spBuilder.append(sp.getAbsolutePath()).append(File.pathSeparator);
-			String sp = spBuilder.toString();
 
-			cmd.add("-sourcepath");
-			cmd.add(sp.substring(0, sp.length() - 1));
-		}
 
 		if (additionalArguments != null)
 			for (String arg : additionalArguments)
