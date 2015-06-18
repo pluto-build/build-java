@@ -4,4 +4,4 @@ build-java/tests/bin
 target/
 META-INF/
 
-build-java/testdata/*/*
+build-java/testdata/*/*/*
