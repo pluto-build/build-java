@@ -2,8 +2,6 @@ package build.pluto.buildjava.eclipse;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -22,7 +20,7 @@ import org.sugarj.common.path.Path;
 import build.pluto.builder.BuildManagers;
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.JavaBuilder;
-import build.pluto.buildjava.JavaBuilder.Input;
+import build.pluto.buildjava.JavaInput;
 import build.pluto.buildjava.util.FileExtensionFilter;
 import build.pluto.output.None;
 
@@ -39,13 +37,11 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		InitConsole();
 
 		try {
-			List<JavaBuilder.Input> inputs = makeInputs(getProject());
-			@SuppressWarnings("unchecked")
-			List<BuildRequest<?, None, ?, ?>> reqs = new ArrayList<>();
-			for (Input input : inputs)
-				reqs.add(new BuildRequest<>(JavaBuilder.factory, input));
+			Stream<JavaInput> inputs = makeInputs(getProject());
+			Iterable<BuildRequest<?, None, ?, ?>> requests = inputs.map(JavaBuilder::request).collect(
+					Collectors.toList());
 
-			BuildManagers.buildAll(reqs);
+			BuildManagers.buildAll(requests);
 
 			getProject().refreshLocal(IProject.DEPTH_INFINITE, monitor);
 		} catch (CoreException e) {
@@ -63,7 +59,7 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 		EclipseConsole.activateConsoleOnce();
 	}
 
-	private List<Input> makeInputs(IProject project) throws JavaModelException {
+	private Stream<JavaInput> makeInputs(IProject project) throws JavaModelException {
 		Environment env = SugarLangProjectEnvironment.makeProjectEnvironment(project);
 
 		Stream<File> files = env.getSourcePath().stream()
@@ -71,9 +67,8 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 
 		Function<List<Path>, List<File>> toFileList = (List<Path> p) -> p.stream().map(Path::getFile).collect(Collectors.<File> toList());
 
-		List<Input> inputs = files.map(
-				(File p) -> new JavaBuilder.Input(Collections.singletonList(p), env.getBin().getFile(), toFileList.apply(env.getSourcePath()), toFileList
-						.apply(env.getIncludePath()), new String[] { "-source", env.getJavaComplianceLevel() }, null, true)).collect(Collectors.toList());
+		Stream<JavaInput> inputs = files.map((File p) -> new JavaInput(p, env.getBin().getFile(), toFileList.apply(env.getSourcePath()), toFileList.apply(env
+				.getIncludePath()), new String[] { "-source", env.getJavaComplianceLevel() }, null));
 
 		return inputs;
 	}

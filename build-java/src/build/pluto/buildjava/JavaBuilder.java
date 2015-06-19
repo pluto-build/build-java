@@ -2,87 +2,82 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.StreamCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.util.Pair;
 
+import build.pluto.builder.BuildCycle;
+import build.pluto.builder.BuildCycleAtOnceBuilder;
 import build.pluto.builder.BuildRequest;
-import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.IMetaBuildingEnabled;
+import build.pluto.builder.CycleSupportFactory;
 import build.pluto.buildjava.util.JavaCommands;
+import build.pluto.buildjava.util.JavaCommands.JavacResult;
 import build.pluto.output.None;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
 
-public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
+public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
-	public static BuilderFactory<Input, None, JavaBuilder> factory = BuilderFactory.of(JavaBuilder.class, Input.class);
+	public static final BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> factory = JavaBuilderFactory.INSTANCE;
+	private static final CycleSupportFactory javaCycleSupportFactory = (BuildCycle cycle) -> new JavaCycleSupport(cycle, factory);
 
-	public static class Input implements Serializable, IMetaBuildingEnabled {
-		private static final long serialVersionUID = -8905198283548748809L;
-		public final List<File> inputFiles;
-		public final File targetDir;
-		public final List<File> sourcePath;
-		public final List<File> classPath;
-		public final String[] additionalArgs;
-		public final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
-		public final boolean deepRequire;
+	private static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
 
-		public Input(List<File> inputFiles, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
-				List<BuildRequest<?, ?, ?, ?>> requiredUnits,
-				boolean deepRequire) {
-			this.inputFiles = inputFiles != null ? inputFiles : Collections.emptyList();
-			this.targetDir = targetDir != null ? targetDir : new File(".");
-			this.sourcePath = sourcePath;
-			this.classPath = classPath != null ? classPath : Collections.singletonList(this.targetDir);
-			this.additionalArgs = additionalArgs;
-			this.injectedDependencies = requiredUnits;
-			this.deepRequire = deepRequire;
-		}
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1714722510759449143L;
+		private static final JavaBuilderFactory INSTANCE = new JavaBuilderFactory();
 
 		@Override
-		public void setMetaBuilding(boolean metaBuilding) {
-			// Do nothing for now... Implementation is currently only in the
-			// hotswap branch
+		public JavaBuilder makeBuilder(ArrayList<JavaInput> input) {
+			return new JavaBuilder(input);
 		}
+
+		private Object readResolve() {
+			return INSTANCE;
+		}
+
 	}
 
-	public JavaBuilder(Input input) {
-		super(input);
+	public static BuildRequest<ArrayList<JavaInput>, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> request(JavaInput input) {
+		return new BuildRequest<>(factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
+	}
+
+	public JavaBuilder(ArrayList<JavaInput> input) {
+		super(input, factory);
 	}
 
 	@Override
-	protected String description(Input input) {
-		return "Compile Java files " + input.inputFiles.toString();
+	protected File singletonPersistencePath(JavaInput input) {
+		return correspondingBinPath(FileCommands.replaceExtension(input.getInputFile(), "dep"), input);
 	}
 
 	@Override
-	protected File persistentPath(Input input) {
-		if (input.inputFiles.size() == 1) {
-			// return new RelativePath(input.targetDir,
-			// FileCommands.fileName(input.inputFiles.get(0)) + ".dep");
-			return correspondingBinPath(FileCommands.replaceExtension(input.inputFiles.get(0), "dep"), input);
-		}
-
-		int hash = input.inputFiles.hashCode();
-		return new File(input.targetDir, "pluto.build.java-" + hash + ".dep");
+	protected String description(ArrayList<JavaInput> input) {
+		return "Compile Java files " + input.stream().map(JavaInput::getInputFile).map(File::getName).reduce((String f1, String f2) -> f1 + ", " + f2).get();
 	}
 
-	private File correspondingBinPath(File srcFile, Input input) {
-		for (File sourcePath : input.sourcePath) {
+	private File correspondingBinPath(File srcFile, JavaInput input) {
+		Optional<File> targetFile = input.getSourcePathStream().map((File sourcePath) -> {
 			Path rel = FileCommands.getRelativePath(sourcePath, srcFile);
 			if (rel != null)
-				return new File(input.targetDir, rel.toString());
-		}
-		return input.targetDir;
+				return new File(input.getTargetDir(), rel.toString());
+			else
+				return (File) null;
+		}).filter((Object o) -> o != null).findFirst();
+		return targetFile.orElse(input.getTargetDir());
 	}
 
 	@Override
@@ -91,73 +86,27 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 	}
 
 	@Override
-	public None build(Input input) throws IOException {
+	protected CycleSupportFactory getCycleSupport() {
+		return javaCycleSupportFactory;
+	}
+
+	@Override
+	public List<None> buildAll(ArrayList<JavaInput> inputs) throws Throwable {
+		List<BuildRequest<?, ?, ?, ?>> injectedDependencies = inputs.stream().flatMap(JavaInput::getInjectedDependenciesStream).distinct()
+				.collect(Collectors.toList());
+		List<File> inputFiles = inputs.stream().map(JavaInput::getInputFile).collect(Collectors.toList());
+		List<File> sourcePaths = inputs.stream().flatMap(JavaInput::getSourcePathStream).distinct().collect(Collectors.toList());
+		File targetDir = inputs.get(0).getTargetDir();
+		String[] additionalArgs = inputs.get(0).getAdditionalArgs();
+		List<File> classPath = inputs.stream().flatMap(JavaInput::getClassPathStream).distinct().collect(Collectors.toList());
+
+		requireBuild(injectedDependencies);
+		inputFiles.forEach(this::require);
+		FileCommands.createDir(targetDir.toPath());
+
+		JavacResult javacResult;
 		try {
-			System.out.println("Injected dependencies " + input.injectedDependencies);
-			requireBuild(input.injectedDependencies);
-
-			for (File p : input.inputFiles)
-				require(p);
-
-			List<File> inputList = input.inputFiles;
-			Pair<List<File>, List<File>> outFiles = JavaCommands.javac(input.inputFiles, input.sourcePath, input.targetDir, input.additionalArgs,
-					input.classPath);
-
-			List<File> filesToRequire = new ArrayList<>();
-			for (File outFile : outFiles.a) {
-				if (input.deepRequire) {
-					Path relP = FileCommands.getRelativePath(input.targetDir, FileCommands.replaceExtension(outFile, "java"));
-
-					boolean found = false;
-					for (File sourcePath : input.sourcePath) {
-						File relSP = new File(sourcePath, relP.toString());
-						if (FileCommands.exists(relSP)) {
-							found = true;
-							if (!inputList.contains(relSP)) {
-								found = false;
-								filesToRequire.add(relSP);
-							}
-							break;
-						}
-					}
-					if (found)
-						provide(outFile);
-				} else {
-					provide(outFile);
-				}
-			}
-			for (File p : filesToRequire) {
-				Input newInput = new Input(Collections.singletonList(p), input.targetDir, input.sourcePath, input.classPath, input.additionalArgs,
-						input.injectedDependencies,
-						input.deepRequire);
-				requireBuild(JavaBuilder.factory, newInput);
-			}
-
-			for (File p : outFiles.b) {
-				Path relP = FileCommands.getRelativePath(input.targetDir, FileCommands.replaceExtension(p, "java"));
-
-				if (input.deepRequire && relP != null) {
-					boolean found = false;
-					if (relP != null)
-						for (File sourcePath : input.sourcePath) {
-							File relSP = new File(sourcePath, relP.toString());
-							if (FileCommands.exists(relSP)) {
-								found = true;
-								if (!inputList.contains(relSP)) {
-									found = false;
-									requireBuild(JavaBuilder.factory, new Input(Collections.singletonList(relSP), input.targetDir, input.sourcePath,
-											input.classPath,
-											input.additionalArgs, input.injectedDependencies, input.deepRequire));
-								}
-								break;
-							}
-						}
-					if (found)
-						require(p);
-				} else {
-					require(p);
-				}
-			}
+			javacResult = JavaCommands.javac(inputFiles, sourcePaths, targetDir, additionalArgs, classPath);
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder("The following errors occured during compilation:\n");
 			for (Pair<SourceLocation, String> error : e.getErrors()) {
@@ -165,6 +114,40 @@ public class JavaBuilder extends Builder<JavaBuilder.Input, None> {
 			}
 			throw new IOException(errMsg.toString());
 		}
-		return None.val;
+		// TODO Dont register all generated files for first input
+		javacResult.generatedFiles.forEach((File gen) -> provide(inputs.get(0), gen));
+
+		StreamCommands.TrowableConsumer<File> requireJavaBuild = (File sourceFile) -> {
+			if (FileCommands.exists(sourceFile)) {
+				if (!inputFiles.contains(sourceFile)) {
+					requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath,
+							additionalArgs, injectedDependencies)));
+				}
+			}
+		};
+
+		for (File p : javacResult.loadedFiles) {
+			switch (FileCommands.getExtension(p)) {
+			case "class":
+				Path relTP = FileCommands.replaceExtension(FileCommands.getRelativePath(targetDir, p), "java");
+				for (File sourcePath : sourcePaths) {
+					File sourceFile = new File(sourcePath, relTP.toString());
+					requireJavaBuild.action(sourceFile);
+				}
+				break;
+			case "java":
+				for (File sourcePath : sourcePaths) {
+					Path relSP = FileCommands.getRelativePath(sourcePath, p);
+					if (relSP != null) {
+						requireJavaBuild.action(p);
+					}
+				}
+				break;
+			}
+			require(p);
+		}
+
+		return Stream.iterate(None.val, UnaryOperator.identity()).limit(inputs.size()).collect(Collectors.toList());
 	}
+
 }
