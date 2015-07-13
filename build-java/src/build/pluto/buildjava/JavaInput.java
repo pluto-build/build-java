@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import build.pluto.builder.BuildRequest;
-import build.pluto.builder.IMetaBuildingEnabled;
 import build.pluto.buildjava.util.ListUtils;
+import build.pluto.dependency.IMetaBuildingEnabled;
 import build.pluto.util.AbsoluteComparedFile;
 
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
