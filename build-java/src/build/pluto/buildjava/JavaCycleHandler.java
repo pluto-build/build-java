@@ -25,7 +25,7 @@ public class JavaCycleHandler extends
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean canBuildCycle(BuildCycle cycle) {
-		if (!super.canBuildCycle()) {
+		if (!super.canBuildCycle(cycle)) {
 			return false;
 		}
 		// Java builder needs not only all components in the cycle be a java
