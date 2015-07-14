@@ -20,7 +20,7 @@ import build.pluto.builder.BuildCycle;
 import build.pluto.builder.BuildCycleAtOnceBuilder;
 import build.pluto.builder.BuildRequest;
 import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.CycleSupportFactory;
+import build.pluto.builder.CycleHandlerFactory;
 import build.pluto.buildjava.util.JavaCommands;
 import build.pluto.buildjava.util.JavaCommands.JavacResult;
 import build.pluto.output.None;
@@ -30,7 +30,7 @@ import build.pluto.stamp.Stamper;
 public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	public static final BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> factory = JavaBuilderFactory.INSTANCE;
-	private static final CycleSupportFactory javaCycleSupportFactory = (BuildCycle cycle) -> new JavaCycleSupport(cycle, factory);
+	private static final CycleHandlerFactory javaCycleSupportFactory = (BuildCycle cycle) -> new JavaCycleHandler(cycle, factory);
 
 	private static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
 
@@ -86,7 +86,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 	}
 
 	@Override
-	protected CycleSupportFactory getCycleSupport() {
+	protected CycleHandlerFactory getCycleSupport() {
 		return javaCycleSupportFactory;
 	}
 

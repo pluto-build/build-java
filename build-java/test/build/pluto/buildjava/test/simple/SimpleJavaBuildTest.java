@@ -14,7 +14,6 @@ import build.pluto.test.build.ScopedBuildTest;
 import build.pluto.test.build.ScopedPath;
 import build.pluto.test.build.TrackingBuildManager;
 
-import com.google.common.io.Files;
 
 public class SimpleJavaBuildTest extends ScopedBuildTest {
 
@@ -61,7 +60,7 @@ public class SimpleJavaBuildTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildAfterChangedSourceFile() throws IOException {
 		build();
-		Files.touch(classAsource);
+		FileUtils.touch(classAsource);
 		TrackingBuildManager manager = build();
 		assertEquals(manager.getExecutedInputs().size(), 1);
 	}

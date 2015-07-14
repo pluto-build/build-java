@@ -15,7 +15,6 @@ import build.pluto.test.build.ScopedBuildTest;
 import build.pluto.test.build.ScopedPath;
 import build.pluto.test.build.TrackingBuildManager;
 
-import com.google.common.io.Files;
 
 public class CyclicFilesTest extends ScopedBuildTest {
 
@@ -57,7 +56,7 @@ public class CyclicFilesTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildOnBChange() throws IOException {
 		build();
-		Files.touch(classBsource);
+		FileUtils.touch(classBsource);
 		TrackingBuildManager manager = build();
 		assertEquals("Should compile class A and B", 2, manager.getExecutedInputs().size());
 	}
@@ -65,7 +64,7 @@ public class CyclicFilesTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildOnAChange() throws IOException {
 		build();
-		Files.touch(classAsource);
+		FileUtils.touch(classAsource);
 		TrackingBuildManager manager = build();
 		assertEquals("Should any execute calss A", 2, manager.getExecutedInputs().size());
 	}
