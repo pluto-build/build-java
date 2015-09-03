@@ -33,11 +33,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 	private static final CycleHandlerFactory javaCycleSupportFactory = (BuildCycle cycle) -> new JavaCycleHandler(cycle, factory);
 
 	private static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
-
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = -1714722510759449143L;
+
 		private static final JavaBuilderFactory INSTANCE = new JavaBuilderFactory();
 
 		@Override
@@ -48,7 +45,6 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		private Object readResolve() {
 			return INSTANCE;
 		}
-
 	}
 
 	public static BuildRequest<ArrayList<JavaInput>, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> request(JavaInput input) {
