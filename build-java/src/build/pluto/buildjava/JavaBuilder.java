@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.sugarj.common.FileCommands;
@@ -116,7 +115,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		}
 		requireBuild(injectedDependencies);
 		
-		FileCommands.createDir(targetDir.toPath());
+		FileCommands.createDir(targetDir);
 		JavacResult javacResult;
 		try {
 			javacResult = JavaCommands.javac(inputFiles, sourcePaths, targetDir, additionalArgs, classPath);
