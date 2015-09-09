@@ -15,13 +15,14 @@ import org.sugarj.common.StringCommands;
 import build.pluto.builder.BuildRequest;
 import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
+import build.pluto.builder.BuilderFactoryFactory;
 import build.pluto.output.None;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
 
 public class JavaJar extends Builder<JavaJar.Input, None> {
 
-	public static BuilderFactory<Input, None, JavaJar> factory = BuilderFactory.of(JavaJar.class, Input.class);
+	public static BuilderFactory<Input, None, JavaJar> factory = BuilderFactoryFactory.of(JavaJar.class, Input.class);
 
 	public static enum Mode {
 		Create, List, Extract, Update, GenIndex, CreateOrUpdate;
