@@ -1,14 +1,13 @@
 package build.pluto.buildjava.eclipse;
 
+import java.io.File;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.sugarj.common.path.AbsolutePath;
-import org.sugarj.common.path.Path;
-import org.sugarj.common.path.RelativePath;
 
 /**
  * @author Sebastian Erdweg
@@ -34,8 +33,8 @@ public class SugarLangProjectEnvironment {
       Environment env = new Environment();
       
       IPath fullPath = project.getProject().getFullPath();
-      Path root = new AbsolutePath(project.getProject().getLocation().makeAbsolute().toString());
-      Path bin = new RelativePath(root, project.getOutputLocation().makeRelativeTo(fullPath).toString());
+      File root = new File(project.getProject().getLocation().makeAbsolute().toString());
+      File bin = new File(root, project.getOutputLocation().makeRelativeTo(fullPath).toString());
       env.setRoot(root);
       env.setBin(bin);
       
@@ -49,13 +48,13 @@ public class SugarLangProjectEnvironment {
         boolean externalPath = fragment.getResource() == null;
         String p = externalPath ? path.toString() : path.makeRelativeTo(fullPath).toString();
 
-        Path includePath; 
+        File includePath; 
         if (fullPath.isPrefixOf(path))
-          includePath = p.isEmpty() ? root : new RelativePath(root, p);
+          includePath = p.isEmpty() ? root : new File(root, p);
         else if (externalPath)
-          includePath = new AbsolutePath(p);
+          includePath = new File(p);
         else
-          includePath = new RelativePath(root, p);
+          includePath = new File(root, p);
         
         if (fragment.getKind() == IPackageFragmentRoot.K_SOURCE && fragment.getParent().equals(project))
           env.addToSourcePath(includePath);
@@ -71,7 +70,7 @@ public class SugarLangProjectEnvironment {
           env.addToIncludePath(projEnv.getBin());
           
           // XXX due to transitive imports in SDF and Stratego
-          for (Path p : projEnv.getIncludePath())
+          for (File p : projEnv.getIncludePath())
             env.addToIncludePath(p);
         }
       }

@@ -1,13 +1,9 @@
 package build.pluto.buildjava.eclipse;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-
-import org.sugarj.common.path.AbsolutePath;
-import org.sugarj.common.path.Path;
-import org.sugarj.common.path.RelativePath;
 
 /**
  * Shared execution environment.
@@ -16,14 +12,14 @@ import org.sugarj.common.path.RelativePath;
  */
 public class Environment {
 
-	private Path root = new AbsolutePath(".");
+	private File root = new File(".");
 
-	private Path binPath = new RelativePath(root, "bin");
+	private File binPath = new File(root, "bin");
 
-	private Path tmpDir = new AbsolutePath(System.getProperty("java.io.tmpdir"));
+	private File tmpDir = new File(System.getProperty("java.io.tmpdir"));
 
-	private List<Path> sourcePath = new LinkedList<Path>();
-	private List<Path> includePath = new LinkedList<Path>();
+	private List<File> sourcePath = new ArrayList<>();
+	private List<File> includePath = new ArrayList<>();
 
 	private String javaComplianceLevel;
 
@@ -31,56 +27,56 @@ public class Environment {
 	public Environment() {
 	}
 
-	public Path getRoot() {
+	public File getRoot() {
 		return root;
 	}
 
-	public void setRoot(Path root) {
+	public void setRoot(File root) {
 		this.root = root;
 	}
 
-	public void addToSourcePath(Path p) {
+	public void addToSourcePath(File p) {
 		sourcePath.add(p);
 	}
 
-	public List<Path> getSourcePath() {
+	public List<File> getSourcePath() {
 		return Collections.unmodifiableList(new ArrayList<>(sourcePath));
 	}
 
-	public void setSourcePath(List<Path> sourcePath) {
+	public void setSourcePath(List<File> sourcePath) {
 		this.sourcePath = sourcePath;
 	}
 
-	public Path getBin() {
+	public File getBin() {
 		return this.binPath;
 	}
 
-	public void setBin(Path binPath) {
+	public void setBin(File binPath) {
 		this.binPath = binPath;
 	}
 
-	public Path getTmpDir() {
+	public File getTmpDir() {
 		return tmpDir;
 	}
 
-	public void setTmpDir(Path tmpDir) {
+	public void setTmpDir(File tmpDir) {
 		this.tmpDir = tmpDir;
 	}
 
-	public void addToIncludePath(Path p) {
+	public void addToIncludePath(File p) {
 		this.includePath.add(p);
 	}
 
-	public List<Path> getIncludePath() {
+	public List<File> getIncludePath() {
 		return Collections.unmodifiableList(new ArrayList<>(includePath));
 	}
 
-	public void setIncludePath(List<Path> includePath) {
+	public void setIncludePath(List<File> includePath) {
 		this.includePath = includePath;
 	}
 
-	public RelativePath createOutPath(String relativePath) {
-		return new RelativePath(getBin(), relativePath);
+	public File createOutPath(String relativePath) {
+		return new File(getBin(), relativePath);
 	}
 
 	public String getJavaComplianceLevel() {
