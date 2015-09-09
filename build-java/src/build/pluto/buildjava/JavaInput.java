@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.util.ListUtils;
@@ -58,19 +57,19 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		return targetDir;
 	}
 
-	public Stream<File> getSourcePathStream() {
-		return sourcePath.stream();
+	public List<File> getSourcePath() {
+		return sourcePath;
 	}
 
-	public Stream<File> getClassPathStream() {
-		return classPath.stream();
+	public List<File> getClassPath() {
+		return classPath;
 	}
 
-	public Stream<BuildRequest<?, ?, ?, ?>> getInjectedDependenciesStream() {
+	public List<BuildRequest<?, ?, ?, ?>> getInjectedDependencies() {
 		if (injectedDependencies == null)
-			return Stream.empty();
+			return Collections.emptyList();
 		else
-			return injectedDependencies.stream();
+			return injectedDependencies;
 	}
 
 	private static <T> boolean arraysEqualsEmptyEqNull(T[] arr1, T[] arr2) {
@@ -89,13 +88,13 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 				return false;
 			if (!AbsoluteComparedFile.equals(targetDir, other.targetDir))
 				return false;
-			if (!ListUtils.equals(sourcePath, other.sourcePath, AbsoluteComparedFile::equals))
+			if (!ListUtils.equals(sourcePath, other.sourcePath))
 				return false;
-			if (!ListUtils.equals(classPath, other.classPath, AbsoluteComparedFile::equals))
+			if (!ListUtils.equals(classPath, other.classPath))
 				return false;
 			if (!arraysEqualsEmptyEqNull(additionalArgs, other.additionalArgs))
 				return false;
-			if (!ListUtils.equalsEmptyEqNull(injectedDependencies, other.injectedDependencies, Object::equals))
+			if (!ListUtils.equalsEmptyEqNull(injectedDependencies, other.injectedDependencies))
 				return false;
 			return true;
 		} else {

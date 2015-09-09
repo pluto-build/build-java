@@ -1,7 +1,6 @@
 package build.pluto.buildjava.util;
 
 import java.util.List;
-import java.util.function.BiPredicate;
 
 public final class ListUtils {
 	public static <T> String printList(List<T> list) {
@@ -20,7 +19,7 @@ public final class ListUtils {
 		return sb.append(postfix).toString();
 	}
 
-	public static <T> boolean equals(List<T> list1, List<T> list2, BiPredicate<? super T, ? super T> compare) {
+	public static <T> boolean equals(List<T> list1, List<T> list2) {
 		if (list1 == null && list2 == null) {
 			return true;
 		}
@@ -28,14 +27,14 @@ public final class ListUtils {
 			return false;
 		}
 		for (int i = 0; i < list1.size(); i++) {
-			if (!compare.test(list1.get(i), list2.get(i))) {
+			if (!list1.get(i).equals(list2.get(i))) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	public static <T> boolean equalsEmptyEqNull(List<T> list1, List<T> list2, BiPredicate<? super T, ? super T> compare) {
+	public static <T> boolean equalsEmptyEqNull(List<T> list1, List<T> list2) {
 		if ((list1 == null || list1.isEmpty()) && (list2 == null || list2.isEmpty())) {
 			return true;
 		}
@@ -43,7 +42,7 @@ public final class ListUtils {
 			return false;
 		}
 		for (int i = 0; i < list1.size(); i++) {
-			if (!compare.test(list1.get(i), list2.get(i))) {
+			if (!list1.get(i).equals(list2.get(i))) {
 				return false;
 			}
 		}

@@ -32,13 +32,14 @@ public class JavaCycleHandler extends
 		// compilation task, but also that they have same compiler args and
 		// target directory
 		JavaInput initialInput = ((ArrayList<JavaInput>) cycle.getInitial().input).get(0);
-		return cycle
-				.getCycleComponents()
-				.stream()
-				.flatMap((BuildRequest<?, ?, ?, ?> r) -> ((ArrayList<JavaInput>) r.input).stream())
-				.allMatch(
-						(JavaInput otherInput) -> otherInput.getTargetDir().equals(initialInput.getTargetDir())
-								&& Arrays.equals(otherInput.getAdditionalArgs(), initialInput.getAdditionalArgs()));
+		
+		for (BuildRequest<?, ?, ?, ?> req : cycle.getCycleComponents())
+			for (JavaInput input : (ArrayList<JavaInput>) req.input)
+				if (!input.getTargetDir().equals(initialInput.getTargetDir())
+					|| !Arrays.equals(input.getAdditionalArgs(), initialInput.getAdditionalArgs()))
+					return false;
+		
+		return true;
 	}
 
 }

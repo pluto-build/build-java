@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.sugarj.common.Exec;
 import org.sugarj.common.Exec.ExecutionError;
@@ -33,10 +32,6 @@ public class JavaCommands {
 
 	}
 
-	private static String concatWithPathSeparator(String s1, String s2) {
-		return s1 + File.pathSeparator + s2;
-	}
-
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
@@ -44,22 +39,30 @@ public class JavaCommands {
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
-		String classpath = Stream.concat(Stream.of(dir), cp.stream()).map(File::getAbsolutePath).map(FileCommands::toWindowsPath).distinct()
-				.reduce(JavaCommands::concatWithPathSeparator).orElse("");
-		cpBuilder.append(classpath);
-
-
 		List<String> cmd = new ArrayList<>();
 
 		cmd.add("javac");
 		if (sourcePaths != null && sourcePaths.size() > 0) {
-			String sourcepath = sourcePaths.stream().map(File::getAbsolutePath).map(FileCommands::toWindowsPath).distinct()
-					.reduce(JavaCommands::concatWithPathSeparator).get();
+			StringBuilder sourcepath = new StringBuilder();
+			for (File p : sourcePaths)
+				sourcepath.append(FileCommands.toWindowsPath(p.getAbsolutePath())).append(File.pathSeparator);
+			String sourcepathString = sourcepath.toString();
+			sourcepathString = sourcepathString.substring(0, sourcepathString.length() - File.pathSeparator.length());
+
 			cmd.add("-sourcepath");
-			cmd.add(sourcepath);
+			cmd.add(sourcepathString);
 		}
+		
 		cmd.add("-cp");
+		StringBuilder classpath = new StringBuilder();
+		classpath.append(dir).append(File.pathSeparator);
+		for (File p : cp)
+			classpath.append(FileCommands.toWindowsPath(p.getAbsolutePath())).append(File.pathSeparator);
+		String classpathString = classpath.toString();
+		classpathString = classpathString.substring(0, classpathString.length() - File.pathSeparator.length());
+		cpBuilder.append(classpath);
 		cmd.add(cpBuilder.toString());
+		
 		cmd.add("-d");
 		cmd.add(FileCommands.toWindowsPath(dir.getAbsolutePath()));
 		cmd.add("-nowarn");
