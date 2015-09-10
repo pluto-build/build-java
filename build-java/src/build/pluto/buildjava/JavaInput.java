@@ -14,20 +14,33 @@ import build.pluto.util.AbsoluteComparedFile;
 
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	private static final long serialVersionUID = -8905198283548748809L;
-	private final File inputFile;
+	private final List<File> inputFiles;
 	private final File targetDir;
 	private final List<File> sourcePath;
 	private final List<File> classPath;
 	private final String[] additionalArgs;
 	private final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
 
+	public JavaInput(List<File> inputFile, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
+			List<BuildRequest<?, ?, ?, ?>> requiredUnits) {
+		Objects.requireNonNull(inputFile);
+		if (sourcePath == null || sourcePath.isEmpty()) {
+			throw new IllegalArgumentException("Provide at least one source path!");
+		}
+		this.inputFiles = inputFile;
+		this.targetDir = targetDir != null ? targetDir : new File(".");
+		this.sourcePath = sourcePath;
+		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
+		this.additionalArgs = additionalArgs;
+		this.injectedDependencies = requiredUnits;
+	}
 	public JavaInput(File inputFile, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
 			List<BuildRequest<?, ?, ?, ?>> requiredUnits) {
 		Objects.requireNonNull(inputFile);
 		if (sourcePath == null || sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Provide at least one source path!");
 		}
-		this.inputFile = inputFile;
+		this.inputFiles = Collections.singletonList(inputFile);
 		this.targetDir = targetDir != null ? targetDir : new File(".");
 		this.sourcePath = sourcePath;
 		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
@@ -35,8 +48,11 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.injectedDependencies = requiredUnits;
 	}
 
-	public JavaInput(File inputFile, File targetDir, File sourcePath) {
+	public JavaInput(List<File> inputFile, File targetDir, File sourcePath) {
 		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null);
+	}
+	public JavaInput(File inputFile, File targetDir, File sourcePath) {
+		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null);
 	}
 
 	@Override
@@ -45,8 +61,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		// hotswap branch
 	}
 
-	public File getInputFile() {
-		return inputFile;
+	public List<File> getInputFiles() {
+		return inputFiles;
 	}
 
 	public String[] getAdditionalArgs() {
@@ -84,8 +100,11 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	public boolean equals(Object obj) {
 		if (obj instanceof JavaInput) {
 			JavaInput other = (JavaInput) obj;
-			if (!AbsoluteComparedFile.equals(inputFile, other.inputFile))
+			if (inputFiles.size() != other.inputFiles.size())
 				return false;
+			for (int i = 0; i < inputFiles.size(); i++)
+				if (!AbsoluteComparedFile.equals(inputFiles.get(i), other.inputFiles.get(i)))
+					return false;
 			if (!AbsoluteComparedFile.equals(targetDir, other.targetDir))
 				return false;
 			if (!ListUtils.equals(sourcePath, other.sourcePath))
@@ -104,7 +123,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 
 	@Override
 	public String toString() {
-		return "JavaInput(input=" + inputFile + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
+		return "JavaInput(input=" + inputFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
 				+ Arrays.toString(additionalArgs) + ", deps=" + injectedDependencies;
 	}
 

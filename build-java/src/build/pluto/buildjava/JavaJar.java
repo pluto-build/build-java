@@ -108,7 +108,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 	}
 
 	@Override
-	protected File persistentPath(Input input) {
+	public File persistentPath(Input input) {
 		String mode = input.mode.modeForPath();
 		if (input.jarPath != null)
 			return FileCommands.addExtension(input.jarPath, mode + "." + "dep");

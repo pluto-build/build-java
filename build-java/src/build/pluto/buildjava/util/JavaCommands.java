@@ -3,6 +3,7 @@ package build.pluto.buildjava.util;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import org.sugarj.common.Exec;
 import org.sugarj.common.Exec.ExecutionError;
 import org.sugarj.common.Exec.ExecutionResult;
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.Log;
 import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
@@ -35,7 +37,7 @@ public class JavaCommands {
 	/**
 	 * @return list of generated class files + list of required class files.
 	 */
-	public static JavacResult javac(List<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
+	public static JavacResult javac(Collection<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
 			throws IOException, SourceCodeException {
 		StringBuilder cpBuilder = new StringBuilder();
 
@@ -74,13 +76,14 @@ public class JavaCommands {
 			for (String arg : additionalArguments)
 				cmd.add(arg);
 
-		for (int i = 0; i < sourceFiles.size(); i++)
-			cmd.add(FileCommands.toWindowsPath(sourceFiles.get(i).getAbsolutePath()));
+		for (File sourceFile : sourceFiles)
+			cmd.add(FileCommands.toWindowsPath(sourceFile.getAbsolutePath()));
 
 		// String stdOut;
 		String errOut;
 		boolean ok = false;
 		try {
+			FileCommands.createDir(dir);
 			ExecutionResult result = Exec.run(cmd.toArray(new String[cmd.size()]));
 			ok = true;
 			// stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
@@ -96,6 +99,8 @@ public class JavaCommands {
 				throw new SourceCodeException(errors);
 		}
 
+		Log.log.log(errOut, Log.CORE);
+		
 		List<File> generatedFiles = extractGeneratedFiles(errOut);
 		List<File> dependentFiles = extractDependentFiles(errOut);
 

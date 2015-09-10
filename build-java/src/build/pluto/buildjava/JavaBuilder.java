@@ -33,7 +33,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		}
 	};
 
-	private static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
+	static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
 		private static final long serialVersionUID = -1714722510759449143L;
 
 		private static final JavaBuilderFactory INSTANCE = new JavaBuilderFactory();
@@ -58,29 +58,20 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	@Override
 	protected File singletonPersistencePath(JavaInput input) {
-		return correspondingBinPath(FileCommands.replaceExtension(input.getInputFile(), "dep"), input);
+		return new File(input.getTargetDir(), "compile.java."+ input.getInputFiles().hashCode() +".dep");
 	}
 
 	@Override
 	protected String description(ArrayList<JavaInput> input) {
 		StringBuilder builder = new StringBuilder();
 		for (JavaInput inp : input)
-			builder.append(inp.getInputFile().getName()).append(", ");
+			for (File f : inp.getInputFiles())
+				builder.append(f.getName()).append(", ");
 		String list = builder.toString();
 		if (!list.isEmpty())
-			list.substring(0, list.length() - 2);
+			list = list.substring(0, list.length() - 2);
 		
 		return "Compile Java files " + list; 
-	}
-
-	private File correspondingBinPath(File srcFile, JavaInput input) {
-		for (File sourcePath : input.getSourcePath()) {
-			Path rel = FileCommands.getRelativePath(sourcePath, srcFile);
-			if (rel != null)
-				return new File(input.getTargetDir(), rel.toString());
-		}
-
-		return input.getTargetDir();
 	}
 
 	@Override
@@ -103,8 +94,11 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		List<File> classPath = new ArrayList<>();
 		
 		for (JavaInput input : inputs) {
-			inputFiles.add(input.getInputFile());
-			require(input.getInputFile());
+			for (File p : input.getInputFiles())
+				if (!inputFiles.contains(p)) {
+					inputFiles.add(p);
+					require(p);
+				}
 			for (File p : input.getSourcePath())
 				if (!sourcePaths.contains(p))
 					sourcePaths.add(p);
