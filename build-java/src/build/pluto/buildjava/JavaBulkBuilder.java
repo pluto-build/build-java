@@ -2,9 +2,7 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -14,17 +12,14 @@ import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.util.Pair;
 
-import build.pluto.builder.BuildRequest;
-import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
 import build.pluto.builder.bulk.BulkBuilder;
 import build.pluto.buildjava.compiler.JavaCompiler.JavaCompilerResult;
 import build.pluto.output.None;
-import build.pluto.output.Output;
 import build.pluto.stamp.FileHashStamper;
 
-public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
+public class JavaBulkBuilder extends BulkBuilder<JavaInput, None> {
 
 	public JavaBulkBuilder(JavaInput input) {
 		super(input);
@@ -35,24 +30,6 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 	@Override
 	protected Collection<File> requiredFiles(JavaInput input) {
 		return input.getInputFiles();
-	}
-
-	@Override
-	protected Collection<JavaInput> splitInput(JavaInput input, Set<File> changedFiles) {
-		List<JavaInput> inputs = new ArrayList<>();
-		for (File f : changedFiles)
-			inputs.add(new JavaInput(f, input.getTargetDir(), input.getSourcePath(), input.getClassPath(), input.getAdditionalArgs(), input.getInjectedDependencies(), input.getCompiler()));
-		return inputs;
-	}
-
-	@Override
-	protected BuildRequest<
-		? extends JavaInput,
-		? extends Output, 
-		? extends Builder<JavaInput, ? extends Output>, 
-		? extends BuilderFactory<? extends JavaInput, ? extends Output, ? extends Builder<JavaInput, ? extends Output>>> 
-	makeSubRequest(JavaInput subInput) {
-		return new BuildRequest<>(factory, subInput);
 	}
 
 	@Override
@@ -73,7 +50,7 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 	}
 
 	@Override
-	protected None buildBulk(JavaInput input, Collection<JavaInput> splitInput, Set<File> changedFiles) throws Exception {
+	protected None buildBulk(JavaInput input, Set<File> changedFiles) throws Exception {
 		Log.log.log("Rebuild Java files " + changedFiles, Log.CORE);
 		
 		requireBuild(input.getInjectedDependencies());
