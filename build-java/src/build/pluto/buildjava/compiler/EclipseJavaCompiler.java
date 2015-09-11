@@ -1,19 +1,19 @@
 package build.pluto.buildjava.compiler;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.sugarj.common.Exec;
-import org.sugarj.common.Exec.ExecutionError;
-import org.sugarj.common.Exec.ExecutionResult;
+import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.AbsolutePath;
@@ -23,16 +23,13 @@ import org.sugarj.common.util.Pair;
  * 
  * Provides methods related to processing Java. Mainly, we provide a method for
  * compiling Java code.
- * 
- * @author Manuel Weiel <weiel at st.informatik.tu-darmstadt.de
- *
  */
-public class JavacCompiler implements JavaCompiler {
+public class EclipseJavaCompiler implements JavaCompiler {
 
 	private static final long serialVersionUID = 1494247105986013915L;
 	
-	public static final JavacCompiler instance = new JavacCompiler(); 
-	private JavacCompiler() { } 
+	public static final EclipseJavaCompiler instance = new EclipseJavaCompiler(); 
+	private EclipseJavaCompiler() { } 
 	
 	public JavaCompilerResult compile(
 			Collection<File> sourceFiles,
@@ -44,7 +41,6 @@ public class JavacCompiler implements JavaCompiler {
 
 		List<String> cmd = new ArrayList<>();
 
-		cmd.add("javac");
 		if (sourcePath != null && sourcePath.size() > 0) {
 			StringBuilder sourcepath = new StringBuilder();
 			for (File p : sourcePath)
@@ -70,7 +66,6 @@ public class JavacCompiler implements JavaCompiler {
 		cmd.add(FileCommands.toWindowsPath(targetDir.getAbsolutePath()));
 		cmd.add("-nowarn");
 		cmd.add("-verbose");
-		cmd.add("-implicit:none");
 
 
 		if (additionalArguments != null)
@@ -80,19 +75,17 @@ public class JavacCompiler implements JavaCompiler {
 		for (File sourceFile : sourceFiles)
 			cmd.add(FileCommands.toWindowsPath(sourceFile.getAbsolutePath()));
 
-		// String stdOut;
-		String errOut;
-		boolean ok = false;
-		try {
-			FileCommands.createDir(targetDir);
-			
-			ExecutionResult result = Exec.run(cmd.toArray(new String[cmd.size()]));
-			ok = true;
-//			 stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
-			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
-		} catch (ExecutionError e) {
-			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
-		}
+		StringWriter outWriter = new StringWriter();
+		StringWriter errWriter = new StringWriter();
+
+		FileCommands.createDir(targetDir);
+		boolean ok = BatchCompiler.compile(
+				cmd.toArray(new String[cmd.size()]), 
+				new PrintWriter(outWriter), 
+				new PrintWriter(errWriter),
+				null);
+		String outOut = outWriter.toString();
+		String errOut = errWriter.toString();
 
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
@@ -100,8 +93,8 @@ public class JavacCompiler implements JavaCompiler {
 				throw new SourceCodeException(errors);
 		}
 
-		Map<File, List<File>> generatedFiles = extractGeneratedFiles(errOut, sourcePath);
-		List<File> requiredFiles = extractRequiredFiles(errOut);
+		Map<File, List<File>> generatedFiles = extractGeneratedFiles(outOut, sourcePath, targetDir);
+		List<File> requiredFiles = extractRequiredFiles(outOut);
 
 		return new JavaCompilerResult(generatedFiles, requiredFiles);
 	}
@@ -109,19 +102,19 @@ public class JavacCompiler implements JavaCompiler {
 	private final static String ERR_PAT = ": error: ";
 	// private final static String LINE_PAT = "(at line ";
 	private final static String START_PAT = "[checking";
-	private final static String GEN_PAT = "[wrote";
-	private final static String DEP_PAT = "[loading";
-	private final static String PARSING_PAT = "[parsing started";
+	private final static String GEN_PAT = "[writing";
+	private final static String DEP_PAT = "[reading";
+	private final static String PARSING_PAT = "[parsing";
 
-	private static Map<File, List<File>> extractGeneratedFiles(String errOut, Collection<File> sourcePath) {
+	private static Map<File, List<File>> extractGeneratedFiles(String outOut, Collection<File> sourcePath, File targetDir) {
 		Map<String, File> parsedFiles = new HashMap<>();
 		Map<File, List<File>> generatedFiles = new HashMap<>();
 		File currentSource = null;
 		int index = 0;
 		while (true) {
-			int parsingIndex = errOut.indexOf(PARSING_PAT, index);
-			int startIndex = errOut.indexOf(START_PAT, index);
-			int genIndex = errOut.indexOf(GEN_PAT, index);
+			int parsingIndex = outOut.indexOf(PARSING_PAT, index);
+			int startIndex = outOut.indexOf(START_PAT, index);
+			int genIndex = outOut.indexOf(GEN_PAT, index);
 			
 			if (genIndex < 0)
 				break;
@@ -129,40 +122,46 @@ public class JavacCompiler implements JavaCompiler {
 			if (parsingIndex >= 0 && (startIndex < 0 || parsingIndex < startIndex) && (genIndex < 0 || parsingIndex < genIndex)) {
 				index = parsingIndex;
 				index += PARSING_PAT.length();
-				while (errOut.charAt(index) != '[')
+				while (outOut.charAt(index) == ' ')
 					index++;
-				index++;
-				int to = errOut.indexOf(']', index);
-				String parsedPath = errOut.substring(index, to);
+				int to = outOut.indexOf(" - ", index);
+				String parsedPath = outOut.substring(index, to);
 				for (File path : sourcePath) {
 					Path relPath = FileCommands.getRelativePath(path, new File(parsedPath));
 					if (relPath != null)
 						parsedFiles.put(FileCommands.dropExtension(relPath).toString(), new File(parsedPath));
 				}
 			}
-			else if (startIndex >= 0 && (genIndex < 0 || startIndex < genIndex)) {
-				index = startIndex;
-				index += START_PAT.length();
-				index++;
-				int to = errOut.indexOf(']', index);
-				String module = errOut.substring(index, to);
-				File source = parsedFiles.get(module.replace('.', File.separatorChar));
-				currentSource = source;
-			}
+//			else if (startIndex >= 0 && (genIndex < 0 || startIndex < genIndex)) {
+//				index = startIndex;
+//				index += START_PAT.length();
+//				int to = outOut.indexOf(']', index);
+//				String module = outOut.substring(index, to);
+//				File source = parsedFiles.get(module.replace('.', File.separatorChar));
+//				currentSource = source;
+//			}
 			else if (genIndex >= 0) {
 				index = genIndex;
 				index += GEN_PAT.length();
-				while (errOut.charAt(index) != '[')
+				while (outOut.charAt(index) == ' ')
 					index++;
-				index++;
-				int to = errOut.indexOf(']', index);
-				String generatedPath = errOut.substring(index, to);
-				List<File> files = generatedFiles.get(currentSource);
+				int to = outOut.indexOf(" - ", index);
+				String generatedPath = outOut.substring(index, to);
+				String fileName = FileCommands.dropExtension(generatedPath);
+				if (!parsedFiles.containsKey(fileName)) {
+					int dollar = fileName.indexOf('$');
+					if (dollar >= 0)
+						fileName = fileName.substring(0, dollar);
+				}
+				if (!parsedFiles.containsKey(fileName))
+					throw new IllegalStateException("Cannot associate source file to " + generatedPath);
+				File source = parsedFiles.get(fileName);
+				List<File> files = generatedFiles.get(source);
 				if (files == null) {
 					files = new ArrayList<>();
-					generatedFiles.put(currentSource, files);
+					generatedFiles.put(source, files);
 				}
-				files.add(new File(generatedPath));
+				files.add(new File(targetDir, generatedPath));
 			}
 			else
 				break;
@@ -170,27 +169,28 @@ public class JavacCompiler implements JavaCompiler {
 		return generatedFiles;
 	}
 
-	private static List<File> extractRequiredFiles(String errOut) {
-		List<File> generatedFiles = new LinkedList<>();
-		int index = 0;
-		while ((index = errOut.indexOf(DEP_PAT, index)) >= 0) {
-			index += DEP_PAT.length();
-			while (errOut.charAt(index) != '[')
-				index++;
-			index++;
-			int to = errOut.indexOf(']', index);
-			String generatedPath = errOut.substring(index, to);
-			if (generatedPath.contains(".sym")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".sym") + 4);
-			}
-			if (generatedPath.contains(".jar")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".jar") + 4);
-			}
-			File file = new File(generatedPath);
-			if (!generatedFiles.contains(file))
-				generatedFiles.add(file);
-		}
-		return generatedFiles;
+	private static List<File> extractRequiredFiles(String outOut) {
+		// TODO extract required files
+		return Collections.emptyList();
+//		List<File> generatedFiles = new LinkedList<>();
+//		int index = 0;
+//		while ((index = outOut.indexOf(DEP_PAT, index)) >= 0) {
+//			index += DEP_PAT.length();
+//			while (outOut.charAt(index) == ' ')
+//				index++;
+//			int to = outOut.indexOf(']', index);
+//			String generatedPath = outOut.substring(index, to);
+//			if (generatedPath.contains(".sym")) {
+//				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".sym") + 4);
+//			}
+//			if (generatedPath.contains(".jar")) {
+//				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".jar") + 4);
+//			}
+//			File file = new File(generatedPath);
+//			if (!generatedFiles.contains(file))
+//				generatedFiles.add(file);
+//		}
+//		return generatedFiles;
 	}
 
 	/**
