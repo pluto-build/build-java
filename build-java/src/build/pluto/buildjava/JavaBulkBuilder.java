@@ -77,6 +77,8 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 	protected None buildBulk(JavaInput input, Collection<JavaInput> splitInput, Set<File> changedFiles) throws IOException {
 		Log.log.log("Rebuild Java files " + changedFiles, Log.CORE);
 		
+		requireBuild(input.getInjectedDependencies());
+		
 		JavacResult javacResult;
 		try {
 			javacResult = JavaCommands.javac(changedFiles, input.getSourcePath(), input.getTargetDir(), input.getAdditionalArgs(), input.getClassPath());
