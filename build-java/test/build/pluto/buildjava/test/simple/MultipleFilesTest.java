@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.junit.Test;
 import org.sugarj.common.FileCommands;
@@ -40,8 +41,6 @@ public class MultipleFilesTest extends ScopedBuildTest {
 		TrackingBuildManager manager = build();
 		assertTrue("No class file for A generated", new File(targetDir, "A.class").exists());
 		assertTrue("No class file for B generated", new File(targetDir, "B.class").exists());
-		assertTrue("No dep file for A generated", new File(targetDir, "A.dep").exists());
-		assertTrue("No dep file for B generated", new File(targetDir, "B.dep").exists());
 		assertEquals(2, manager.getExecutedInputs().size());
 	}
 

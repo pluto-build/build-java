@@ -41,8 +41,6 @@ public class CyclicFilesTest extends ScopedBuildTest {
 		TrackingBuildManager manager = build();
 		assertTrue("No class file for A generated", new File(targetDir, "A.class").exists());
 		assertTrue("No class file for B generated", new File(targetDir, "B.class").exists());
-		assertTrue("No dep file for A generated", new File(targetDir, "A.dep").exists());
-		assertTrue("No dep file for B generated", new File(targetDir, "B.dep").exists());
 		assertEquals(2, manager.getExecutedInputs().size());
 	}
 
@@ -56,7 +54,7 @@ public class CyclicFilesTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildOnBChange() throws IOException {
 		build();
-		FileUtils.touch(classBsource);
+		FileCommands.writeToFile(classBsource, "class B {A a;}");
 		TrackingBuildManager manager = build();
 		assertEquals("Should compile class A and B", 2, manager.getExecutedInputs().size());
 	}
@@ -64,7 +62,7 @@ public class CyclicFilesTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildOnAChange() throws IOException {
 		build();
-		FileUtils.touch(classAsource);
+		FileCommands.writeToFile(classAsource, "class A { private B b; }");
 		TrackingBuildManager manager = build();
 		assertEquals("Should any execute calss A", 2, manager.getExecutedInputs().size());
 	}

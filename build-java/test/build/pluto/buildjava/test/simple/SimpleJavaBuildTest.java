@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.junit.Test;
+import org.sugarj.common.FileCommands;
 
 import build.pluto.buildjava.JavaBuilder;
 import build.pluto.buildjava.JavaInput;
@@ -60,9 +61,9 @@ public class SimpleJavaBuildTest extends ScopedBuildTest {
 	@Test
 	public void testRebuildAfterChangedSourceFile() throws IOException {
 		build();
-		FileUtils.touch(classAsource);
+		FileCommands.writeToFile(classAsource, "class A {     }");
 		TrackingBuildManager manager = build();
-		assertEquals(manager.getExecutedInputs().size(), 1);
+		assertEquals(1, manager.getExecutedInputs().size());
 	}
 
 }

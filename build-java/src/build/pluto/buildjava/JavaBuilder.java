@@ -20,6 +20,7 @@ import build.pluto.builder.CycleHandlerFactory;
 import build.pluto.buildjava.util.JavaCommands;
 import build.pluto.buildjava.util.JavaCommands.JavacResult;
 import build.pluto.output.None;
+import build.pluto.stamp.FileHashStamper;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
 
@@ -97,7 +98,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			for (File p : input.getInputFiles())
 				if (!inputFiles.contains(p)) {
 					inputFiles.add(p);
-					require(p);
+					require(p, FileHashStamper.instance);
 				}
 			for (File p : input.getSourcePath())
 				if (!sourcePaths.contains(p))
