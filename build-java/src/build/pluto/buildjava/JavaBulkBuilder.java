@@ -18,6 +18,7 @@ import build.pluto.builder.BuildRequest;
 import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.builder.bulk.BulkBuilder;
 import build.pluto.buildjava.util.JavaCommands;
 import build.pluto.buildjava.util.JavaCommands.JavacResult;
 import build.pluto.output.None;

@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.sugarj.common.FileCommands;
 
 import build.pluto.BuildUnit;
-import build.pluto.buildjava.BulkBuilder.BulkOutput;
+import build.pluto.builder.bulk.BulkBuilder.BulkOutput;
 import build.pluto.buildjava.JavaBulkBuilder;
 import build.pluto.buildjava.JavaInput;
 import build.pluto.dependency.BuildRequirement;
