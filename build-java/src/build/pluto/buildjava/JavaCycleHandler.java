@@ -1,7 +1,7 @@
 package build.pluto.buildjava;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Objects;
 
 import build.pluto.builder.BuildAtOnceCycleHandler;
 import build.pluto.builder.BuildCycle;
@@ -36,7 +36,7 @@ public class JavaCycleHandler extends
 		for (BuildRequest<?, ?, ?, ?> req : cycle.getCycleComponents())
 			for (JavaInput input : (ArrayList<JavaInput>) req.input)
 				if (!input.getTargetDir().equals(initialInput.getTargetDir())
-					|| !Arrays.equals(input.getAdditionalArgs(), initialInput.getAdditionalArgs()))
+					|| !Objects.equals(input.getAdditionalArgs(), initialInput.getAdditionalArgs()))
 					return false;
 		
 		return true;

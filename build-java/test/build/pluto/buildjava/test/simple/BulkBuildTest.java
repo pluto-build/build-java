@@ -19,6 +19,7 @@ import build.pluto.BuildUnit;
 import build.pluto.builder.bulk.BulkBuilder.BulkOutput;
 import build.pluto.buildjava.JavaBulkBuilder;
 import build.pluto.buildjava.JavaInput;
+import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.dependency.BuildRequirement;
 import build.pluto.dependency.FileRequirement;
 import build.pluto.dependency.Requirement;
@@ -61,7 +62,7 @@ public class BulkBuildTest extends ScopedBuildTest {
 	private TrackingBuildManager build() throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
 		List<File> sourceFiles = Arrays.asList(classAsource, classBsource, classCsource, classDsource);
-		BuildRequirement<BulkOutput<None>> req = manager.require(JavaBulkBuilder.factory, new JavaInput(sourceFiles, targetDir, sourcePath));
+		BuildRequirement<BulkOutput<None>> req = manager.require(JavaBulkBuilder.factory, new JavaInput(sourceFiles, targetDir, sourcePath, JavacCompiler.instance));
 		lastUnit = req.getUnit();
 		return manager;
 	}

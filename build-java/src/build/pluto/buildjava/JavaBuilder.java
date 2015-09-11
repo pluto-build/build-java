@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.sugarj.common.FileCommands;
@@ -17,8 +18,8 @@ import build.pluto.builder.BuildRequest;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.CycleHandler;
 import build.pluto.builder.CycleHandlerFactory;
-import build.pluto.buildjava.util.JavaCommands;
-import build.pluto.buildjava.util.JavaCommands.JavacResult;
+import build.pluto.buildjava.compiler.JavaCompiler;
+import build.pluto.buildjava.compiler.JavaCompiler.JavaCompilerResult;
 import build.pluto.output.None;
 import build.pluto.stamp.FileHashStamper;
 import build.pluto.stamp.LastModifiedStamper;
@@ -91,8 +92,9 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		List<File> sourcePaths = new ArrayList<>();
 		List<BuildRequest<?, ?, ?, ?>> injectedDependencies = new ArrayList<>();
 		File targetDir = inputs.get(0).getTargetDir();
-		String[] additionalArgs = inputs.get(0).getAdditionalArgs();
+		Collection<String> additionalArgs = inputs.get(0).getAdditionalArgs();
 		List<File> classPath = new ArrayList<>();
+		JavaCompiler compiler = inputs.get(0).getCompiler();
 		
 		for (JavaInput input : inputs) {
 			for (File p : input.getInputFiles())
@@ -111,9 +113,9 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		requireBuild(injectedDependencies);
 		
 		FileCommands.createDir(targetDir);
-		JavacResult javacResult;
+		JavaCompilerResult compilerResult;
 		try {
-			javacResult = JavaCommands.javac(inputFiles, sourcePaths, targetDir, additionalArgs, classPath);
+			compilerResult = compiler.compile(inputFiles, targetDir, sourcePaths, classPath, additionalArgs);
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder("The following errors occured during compilation:\n");
 			for (Pair<SourceLocation, String> error : e.getErrors()) {
@@ -122,25 +124,25 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			throw new IOException(errMsg.toString(), e);
 		}
 		// TODO Dont register all generated files for first input
-		for (List<File> gens : javacResult.generatedFiles.values())
+		for (Collection<File> gens : compilerResult.getGeneratedFiles().values())
 			for (File gen : gens)
 				provide(inputs.get(0), gen);
 		
-		for (File p : javacResult.loadedFiles) {
+		for (File p : compilerResult.getLoadedFiles()) {
 			switch (FileCommands.getExtension(p)) {
 			case "class":
 				Path relTP = FileCommands.replaceExtension(FileCommands.getRelativePath(targetDir, p), "java");
 				for (File sourcePath : sourcePaths) {
 					File sourceFile = new File(sourcePath, relTP.toString());
 					if (FileCommands.exists(sourceFile) && !inputFiles.contains(sourceFile))
-						requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies)));
+						requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
 				}
 				break;
 			case "java":
 				for (File sourcePath : sourcePaths) {
 					Path relSP = FileCommands.getRelativePath(sourcePath, p);
 					if (relSP != null && FileCommands.exists(p) && !inputFiles.contains(p))
-						requireBuild(JavaBuilder.request(new JavaInput(p, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies)));
+						requireBuild(JavaBuilder.request(new JavaInput(p, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
 				}
 				break;
 			}

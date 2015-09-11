@@ -2,27 +2,36 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import build.pluto.builder.BuildRequest;
+import build.pluto.buildjava.compiler.JavaCompiler;
 import build.pluto.buildjava.util.ListUtils;
 import build.pluto.dependency.IMetaBuildingEnabled;
 import build.pluto.util.AbsoluteComparedFile;
 
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
+	public static enum Compiler {
+		JAVAC, ECLIPSE;
+	}
+	
 	private static final long serialVersionUID = -8905198283548748809L;
 	private final List<File> inputFiles;
 	private final File targetDir;
 	private final List<File> sourcePath;
 	private final List<File> classPath;
-	private final String[] additionalArgs;
+	private final Collection<String> additionalArgs;
+	private final JavaCompiler compiler;
 	private final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
 
-	public JavaInput(List<File> inputFile, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
-			List<BuildRequest<?, ?, ?, ?>> requiredUnits) {
+	public JavaInput(List<File> inputFile, File targetDir,
+			List<File> sourcePath, List<File> classPath,
+			Collection<String> additionalArgs,
+			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
+			JavaCompiler compiler) {
 		Objects.requireNonNull(inputFile);
 		if (sourcePath == null || sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Provide at least one source path!");
@@ -33,9 +42,13 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
 		this.additionalArgs = additionalArgs;
 		this.injectedDependencies = requiredUnits;
+		this.compiler = compiler;
 	}
-	public JavaInput(File inputFile, File targetDir, List<File> sourcePath, List<File> classPath, String[] additionalArgs,
-			List<BuildRequest<?, ?, ?, ?>> requiredUnits) {
+	
+	public JavaInput(File inputFile, File targetDir, List<File> sourcePath,
+			List<File> classPath, Collection<String> additionalArgs,
+			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
+			JavaCompiler compiler) {
 		Objects.requireNonNull(inputFile);
 		if (sourcePath == null || sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Provide at least one source path!");
@@ -46,13 +59,14 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
 		this.additionalArgs = additionalArgs;
 		this.injectedDependencies = requiredUnits;
+		this.compiler = compiler;
 	}
 
-	public JavaInput(List<File> inputFile, File targetDir, File sourcePath) {
-		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null);
+	public JavaInput(List<File> inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
+		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, compiler);
 	}
-	public JavaInput(File inputFile, File targetDir, File sourcePath) {
-		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null);
+	public JavaInput(File inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
+		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, compiler);
 	}
 
 	@Override
@@ -65,7 +79,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		return inputFiles;
 	}
 
-	public String[] getAdditionalArgs() {
+	public Collection<String> getAdditionalArgs() {
 		return additionalArgs;
 	}
 
@@ -81,19 +95,15 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		return classPath;
 	}
 
+	public JavaCompiler getCompiler() {
+		return compiler;
+	}
+	
 	public List<BuildRequest<?, ?, ?, ?>> getInjectedDependencies() {
 		if (injectedDependencies == null)
 			return Collections.emptyList();
 		else
 			return injectedDependencies;
-	}
-
-	private static <T> boolean arraysEqualsEmptyEqNull(T[] arr1, T[] arr2) {
-		if ((arr1 == null || arr1.length == 0) && (arr2 == null || arr2.length == 0))
-			return true;
-		if (arr1 == null || arr2 == null)
-			return false;
-		return Arrays.equals(arr1, arr2);
 	}
 
 	@Override
@@ -111,7 +121,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 				return false;
 			if (!ListUtils.equals(classPath, other.classPath))
 				return false;
-			if (!arraysEqualsEmptyEqNull(additionalArgs, other.additionalArgs))
+			if (!Objects.equals(additionalArgs, other.additionalArgs))
 				return false;
 			if (!ListUtils.equalsEmptyEqNull(injectedDependencies, other.injectedDependencies))
 				return false;
@@ -124,7 +134,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	@Override
 	public String toString() {
 		return "JavaInput(input=" + inputFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
-				+ Arrays.toString(additionalArgs) + ", deps=" + injectedDependencies;
+				+ additionalArgs + ", deps=" + injectedDependencies;
 	}
 
 }

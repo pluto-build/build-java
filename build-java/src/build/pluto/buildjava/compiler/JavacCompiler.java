@@ -1,7 +1,6 @@
-package build.pluto.buildjava.util;
+package build.pluto.buildjava.compiler;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,39 +27,39 @@ import org.sugarj.common.util.Pair;
  * @author Manuel Weiel <weiel at st.informatik.tu-darmstadt.de
  *
  */
-public class JavaCommands {
+public class JavacCompiler implements JavaCompiler {
 
-	public static class JavacResult {
-		public Map<File, List<File>> generatedFiles;
-		public List<File> loadedFiles;
-
-	}
-
-	/**
-	 * @return list of generated class files + list of required class files.
-	 */
-	public static JavacResult javac(Collection<File> sourceFiles, List<File> sourcePaths, File dir, String[] additionalArguments, List<File> cp)
-			throws IOException, SourceCodeException {
+	private static final long serialVersionUID = 1494247105986013915L;
+	
+	public static final JavacCompiler instance = new JavacCompiler(); 
+	private JavacCompiler() { } 
+	
+	public JavaCompilerResult compile(
+			Collection<File> sourceFiles,
+			File targetDir, 
+			Collection<File> sourcePath,
+			Collection<File> classPath,
+			Collection<String> additionalArguments) throws Exception {
 		StringBuilder cpBuilder = new StringBuilder();
 
 		List<String> cmd = new ArrayList<>();
 
 		cmd.add("javac");
-		if (sourcePaths != null && sourcePaths.size() > 0) {
+		if (sourcePath != null && sourcePath.size() > 0) {
 			StringBuilder sourcepath = new StringBuilder();
-			for (File p : sourcePaths)
+			for (File p : sourcePath)
 				sourcepath.append(FileCommands.toWindowsPath(p.getAbsolutePath())).append(File.pathSeparator);
-			String sourcepathString = sourcepath.toString();
-			sourcepathString = sourcepathString.substring(0, sourcepathString.length() - File.pathSeparator.length());
+			String sourcePathtring = sourcepath.toString();
+			sourcePathtring = sourcePathtring.substring(0, sourcePathtring.length() - File.pathSeparator.length());
 
 			cmd.add("-sourcepath");
-			cmd.add(sourcepathString);
+			cmd.add(sourcePathtring);
 		}
 		
 		cmd.add("-cp");
 		StringBuilder classpath = new StringBuilder();
-		classpath.append(dir).append(File.pathSeparator);
-		for (File p : cp)
+		classpath.append(targetDir).append(File.pathSeparator);
+		for (File p : classPath)
 			classpath.append(FileCommands.toWindowsPath(p.getAbsolutePath())).append(File.pathSeparator);
 		String classpathString = classpath.toString();
 		classpathString = classpathString.substring(0, classpathString.length() - File.pathSeparator.length());
@@ -68,7 +67,7 @@ public class JavaCommands {
 		cmd.add(cpBuilder.toString());
 		
 		cmd.add("-d");
-		cmd.add(FileCommands.toWindowsPath(dir.getAbsolutePath()));
+		cmd.add(FileCommands.toWindowsPath(targetDir.getAbsolutePath()));
 		cmd.add("-nowarn");
 		cmd.add("-verbose");
 		cmd.add("-implicit:none");
@@ -85,15 +84,13 @@ public class JavaCommands {
 		String errOut;
 		boolean ok = false;
 		try {
-			FileCommands.createDir(dir);
+			FileCommands.createDir(targetDir);
 			
-//			BatchCompiler.compile(cmd.toArray(new String[cmd.size()]), new PrintWriter("/Users/seba/tmp/ejcout"), new PrintWriter("/Users/seba/tmp/ejcerr"), null);
 			ExecutionResult result = Exec.run(cmd.toArray(new String[cmd.size()]));
 			ok = true;
 //			 stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
 			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
 		} catch (ExecutionError e) {
-			// stdOut = StringCommands.printListSeparated(e.outMsgs, "\n");
 			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
 
@@ -103,14 +100,10 @@ public class JavaCommands {
 				throw new SourceCodeException(errors);
 		}
 
-		Map<File, List<File>> generatedFiles = extractGeneratedFiles(errOut, sourcePaths);
-		List<File> dependentFiles = extractDependentFiles(errOut);
+		Map<File, List<File>> generatedFiles = extractGeneratedFiles(errOut, sourcePath);
+		List<File> requiredFiles = extractRequiredFiles(errOut);
 
-		JavacResult result = new JavacResult();
-		result.generatedFiles = generatedFiles;
-		result.loadedFiles = dependentFiles;
-
-		return result;
+		return new JavaCompilerResult(generatedFiles, requiredFiles);
 	}
 
 	private final static String ERR_PAT = ": error: ";
@@ -120,7 +113,7 @@ public class JavaCommands {
 	private final static String DEP_PAT = "[loading";
 	private final static String PARSING_PAT = "[parsing started";
 
-	private static Map<File, List<File>> extractGeneratedFiles(String errOut, List<File> sourcePaths) {
+	private static Map<File, List<File>> extractGeneratedFiles(String errOut, Collection<File> sourcePath) {
 		Map<String, File> parsedFiles = new HashMap<>();
 		Map<File, List<File>> generatedFiles = new HashMap<>();
 		File currentSource = null;
@@ -141,7 +134,7 @@ public class JavaCommands {
 				index++;
 				int to = errOut.indexOf(']', index);
 				String parsedPath = errOut.substring(index, to);
-				for (File path : sourcePaths) {
+				for (File path : sourcePath) {
 					Path relPath = FileCommands.getRelativePath(path, new File(parsedPath));
 					if (relPath != null)
 						parsedFiles.put(FileCommands.dropExtension(relPath).toString(), new File(parsedPath));
@@ -177,7 +170,7 @@ public class JavaCommands {
 		return generatedFiles;
 	}
 
-	private static List<File> extractDependentFiles(String errOut) {
+	private static List<File> extractRequiredFiles(String errOut) {
 		List<File> generatedFiles = new LinkedList<>();
 		int index = 0;
 		while ((index = errOut.indexOf(DEP_PAT, index)) >= 0) {

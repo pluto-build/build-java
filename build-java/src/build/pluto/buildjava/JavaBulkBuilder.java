@@ -19,8 +19,7 @@ import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
 import build.pluto.builder.bulk.BulkBuilder;
-import build.pluto.buildjava.util.JavaCommands;
-import build.pluto.buildjava.util.JavaCommands.JavacResult;
+import build.pluto.buildjava.compiler.JavaCompiler.JavaCompilerResult;
 import build.pluto.output.None;
 import build.pluto.output.Output;
 import build.pluto.stamp.FileHashStamper;
@@ -42,7 +41,7 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 	protected Collection<JavaInput> splitInput(JavaInput input, Set<File> changedFiles) {
 		List<JavaInput> inputs = new ArrayList<>();
 		for (File f : changedFiles)
-			inputs.add(new JavaInput(f, input.getTargetDir(), input.getSourcePath(), input.getClassPath(), input.getAdditionalArgs(), input.getInjectedDependencies()));
+			inputs.add(new JavaInput(f, input.getTargetDir(), input.getSourcePath(), input.getClassPath(), input.getAdditionalArgs(), input.getInjectedDependencies(), input.getCompiler()));
 		return inputs;
 	}
 
@@ -74,14 +73,13 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 	}
 
 	@Override
-	protected None buildBulk(JavaInput input, Collection<JavaInput> splitInput, Set<File> changedFiles) throws IOException {
+	protected None buildBulk(JavaInput input, Collection<JavaInput> splitInput, Set<File> changedFiles) throws Exception {
 		Log.log.log("Rebuild Java files " + changedFiles, Log.CORE);
 		
 		requireBuild(input.getInjectedDependencies());
-		
-		JavacResult javacResult;
+		JavaCompilerResult compilerResult;
 		try {
-			javacResult = JavaCommands.javac(changedFiles, input.getSourcePath(), input.getTargetDir(), input.getAdditionalArgs(), input.getClassPath());
+			compilerResult = input.getCompiler().compile(changedFiles, input.getTargetDir(), input.getSourcePath(), input.getClassPath(), input.getAdditionalArgs());
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder("The following errors occured during compilation:\n");
 			for (Pair<SourceLocation, String> error : e.getErrors()) {
@@ -95,11 +93,11 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None, JavaInput> {
 			for (File file : input.getInputFiles())
 				require(source, file, FileHashStamper.instance);
 		
-		for (Entry<File,List<File>> e : javacResult.generatedFiles.entrySet()) {
+		for (Entry<File, ? extends Collection<File>> e : compilerResult.getGeneratedFiles().entrySet()) {
 			for (File gen : e.getValue())
 				provide(e.getKey(), gen);
 		}
-		for (File f : javacResult.loadedFiles)
+		for (File f : compilerResult.getLoadedFiles())
 			require(f);
 		
 		return null;
