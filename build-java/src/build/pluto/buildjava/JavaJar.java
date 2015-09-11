@@ -149,6 +149,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 				args.add("-C");
 				args.add(classpath.getAbsolutePath());
 				for (File f : files) {
+				    require(f);
 					args.add(FileCommands.getRelativePath(classpath, f).toString());
 				}
 			}
