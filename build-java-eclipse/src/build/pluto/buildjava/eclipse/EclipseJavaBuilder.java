@@ -70,7 +70,8 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 						env.getSourcePath(), 
 						env.getIncludePath(), 
 						new String[] { "-source", env.getJavaComplianceLevel() },
-						null));
+						null,
+						JavacCompiler.instance));
 		
 		return inputs;
 	}
