@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.Log;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.util.Pair;
@@ -75,10 +74,9 @@ public class NoncyclicJavaBuilder extends Builder<JavaInput, None> {
 			throw new IOException(errMsg.toString(), e);
 		}
 
-		for (File gen : javacResult.generatedFiles) {
-			Log.log.log("Generated file " + gen, Log.CORE);
-			provide(gen);
-		}
+		for (List<File> gens : javacResult.generatedFiles.values())
+			for (File gen : gens)
+				provide(gen);
 		
 		List<File> additionalSourceFiles = new ArrayList<>();
 		for (File p : javacResult.loadedFiles) {

@@ -121,8 +121,9 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			throw new IOException(errMsg.toString(), e);
 		}
 		// TODO Dont register all generated files for first input
-		for (File gen : javacResult.generatedFiles)
-			provide(inputs.get(0), gen);
+		for (List<File> gens : javacResult.generatedFiles.values())
+			for (File gen : gens)
+				provide(inputs.get(0), gen);
 		
 		for (File p : javacResult.loadedFiles) {
 			switch (FileCommands.getExtension(p)) {

@@ -5,3 +5,5 @@ target/
 META-INF/
 
 build-java/testdata/*/*/*
+!build-java/testdata/*/foo/*
+

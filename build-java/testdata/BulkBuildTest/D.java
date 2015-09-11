@@ -1,3 +1,3 @@
 class D {
-	
+	class DFoo {}
 }
