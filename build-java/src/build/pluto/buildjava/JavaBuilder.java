@@ -100,7 +100,6 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			for (File p : input.getInputFiles())
 				if (!inputFiles.contains(p)) {
 					inputFiles.add(p);
-					require(p, FileHashStamper.instance);
 				}
 			for (File p : input.getSourcePath())
 				if (!sourcePaths.contains(p))
@@ -111,6 +110,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			injectedDependencies.addAll(input.getInjectedDependencies());
 		}
 		requireBuild(injectedDependencies);
+		for (File p : inputFiles)
+			require(p, FileHashStamper.instance);
 		
 		FileCommands.createDir(targetDir);
 		JavaCompilerResult compilerResult;
