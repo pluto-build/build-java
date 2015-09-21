@@ -2,16 +2,14 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.compiler.JavaCompiler;
-import build.pluto.buildjava.util.ListUtils;
 import build.pluto.dependency.IMetaBuildingEnabled;
-import build.pluto.util.AbsoluteComparedFile;
 
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	public static enum Compiler {
@@ -27,21 +25,31 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	private final JavaCompiler compiler;
 	private final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
 
-	public JavaInput(List<File> inputFile, File targetDir,
-			List<File> sourcePath, List<File> classPath,
+	public JavaInput(
+			List<File> inputFiles,
+			File targetDir,
+			List<File> sourcePath, 
+			List<File> classPath,
 			Collection<String> additionalArgs,
 			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
 			JavaCompiler compiler) {
-		Objects.requireNonNull(inputFile);
 		if (sourcePath == null || sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Provide at least one source path!");
 		}
-		this.inputFiles = inputFile;
-		this.targetDir = targetDir != null ? targetDir : new File(".");
+		
+		List<File> absoluteInputFiles = new ArrayList<>(inputFiles.size());
+		for (File f : inputFiles)
+			absoluteInputFiles.add(f.getAbsoluteFile());
+		this.inputFiles = Collections.unmodifiableList(absoluteInputFiles);
+		
+		this.targetDir = (targetDir != null ? targetDir : new File(".")).getAbsoluteFile();
 		this.sourcePath = sourcePath;
 		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
 		this.additionalArgs = additionalArgs;
-		this.injectedDependencies = requiredUnits;
+		if (requiredUnits == null || requiredUnits.isEmpty())
+			this.injectedDependencies = null;
+		else
+			this.injectedDependencies = requiredUnits;
 		this.compiler = compiler;
 	}
 	
@@ -49,17 +57,13 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			List<File> classPath, Collection<String> additionalArgs,
 			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
 			JavaCompiler compiler) {
-		Objects.requireNonNull(inputFile);
-		if (sourcePath == null || sourcePath.isEmpty()) {
-			throw new IllegalArgumentException("Provide at least one source path!");
-		}
-		this.inputFiles = Collections.singletonList(inputFile);
-		this.targetDir = targetDir != null ? targetDir : new File(".");
-		this.sourcePath = sourcePath;
-		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
-		this.additionalArgs = additionalArgs;
-		this.injectedDependencies = requiredUnits;
-		this.compiler = compiler;
+		this(	Collections.singletonList(inputFile),
+				targetDir,
+				sourcePath,
+				classPath,
+				additionalArgs,
+				requiredUnits,
+				compiler);
 	}
 
 	public JavaInput(List<File> inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
@@ -104,31 +108,6 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			return Collections.emptyList();
 		else
 			return injectedDependencies;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof JavaInput) {
-			JavaInput other = (JavaInput) obj;
-			if (inputFiles.size() != other.inputFiles.size())
-				return false;
-			for (int i = 0; i < inputFiles.size(); i++)
-				if (!AbsoluteComparedFile.equals(inputFiles.get(i), other.inputFiles.get(i)))
-					return false;
-			if (!AbsoluteComparedFile.equals(targetDir, other.targetDir))
-				return false;
-			if (!ListUtils.equals(sourcePath, other.sourcePath))
-				return false;
-			if (!ListUtils.equals(classPath, other.classPath))
-				return false;
-			if (!Objects.equals(additionalArgs, other.additionalArgs))
-				return false;
-			if (!ListUtils.equalsEmptyEqNull(injectedDependencies, other.injectedDependencies))
-				return false;
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	@Override
