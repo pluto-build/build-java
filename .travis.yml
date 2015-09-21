@@ -1,8 +1,9 @@
 sudo: false
-script: (cd build-java; mvn deploy -U) && (cd build-java-eclipse; mvn deploy -U)
+script: (cd build-java; mvn deploy -U)
+# && (cd build-java-eclipse; mvn deploy -U)
 
 cache:
   directories:
     - '$HOME/.m2/repository'
 
-jdk: oraclejdk8
+jdk: oraclejdk7
