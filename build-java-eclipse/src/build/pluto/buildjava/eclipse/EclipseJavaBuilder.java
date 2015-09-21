@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import build.pluto.builder.BuildManagers;
 import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.JavaBuilder;
 import build.pluto.buildjava.JavaInput;
+import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.buildjava.util.FileExtensionFilter;
 import build.pluto.output.None;
 
@@ -68,8 +70,8 @@ public class EclipseJavaBuilder extends IncrementalProjectBuilder {
 						p.toFile(), 
 						env.getBin(), 
 						env.getSourcePath(), 
-						env.getIncludePath(), 
-						new String[] { "-source", env.getJavaComplianceLevel() },
+						env.getIncludePath(),
+						Arrays.asList("-source", env.getJavaComplianceLevel()),
 						null,
 						JavacCompiler.instance));
 		
