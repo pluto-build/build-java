@@ -146,10 +146,10 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		for (File classpath : input.files.keySet()) {
 			Set<File> files = input.files.get(classpath);
 			if (!files.isEmpty()) {
-				args.add("-C");
-				args.add(classpath.getAbsolutePath());
 				for (File f : files) {
-				    require(f);
+					args.add("-C");
+					args.add(classpath.getAbsolutePath());
+					require(f);
 					args.add(FileCommands.getRelativePath(classpath, f).toString());
 				}
 			}
