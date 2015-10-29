@@ -21,6 +21,7 @@ import build.pluto.builder.CycleHandlerFactory;
 import build.pluto.buildjava.compiler.JavaCompiler;
 import build.pluto.buildjava.compiler.JavaCompiler.JavaCompilerResult;
 import build.pluto.output.None;
+import build.pluto.stamp.FileExistsStamper;
 import build.pluto.stamp.FileHashStamper;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
@@ -131,23 +132,37 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		
 		for (File p : compilerResult.getLoadedFiles()) {
 			switch (FileCommands.getExtension(p)) {
+			case "jar":
+				String relJar = findRelativePath(p, classPath);
+				installBinaryDep(relJar, classPath);
+				break;
+				
 			case "class":
-				Path relTP = FileCommands.replaceExtension(FileCommands.getRelativePath(targetDir, p), "java");
-				for (File sourcePath : sourcePaths) {
-					File sourceFile = new File(sourcePath, relTP.toString());
-					if (FileCommands.exists(sourceFile) && !inputFiles.contains(sourceFile))
-						requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
+				Path rel = FileCommands.getRelativePath(targetDir, p);
+				// if class file is in target dir
+				if (rel != null) {
+					Path relClassSource = FileCommands.replaceExtension(rel, "java");
+					installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, compiler);
+					require(p);
+				}
+				else {
+					String relClass = findRelativePath(p, classPath);
+					installBinaryDep(relClass, classPath);
 				}
 				break;
+				
 			case "java":
-				for (File sourcePath : sourcePaths) {
-					Path relSP = FileCommands.getRelativePath(sourcePath, p);
-					if (relSP != null && FileCommands.exists(p) && !inputFiles.contains(p))
-						requireBuild(JavaBuilder.request(new JavaInput(p, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
-				}
+				// install source dependency
+				String relSource = findRelativePath(p, sourcePaths);
+				if (relSource == null)
+					throw new IllegalStateException("Cannot find source file " + p + " in sourcepath " + sourcePaths.toString());
+				installSourceDep(relSource, inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, compiler);
+				require(p);
 				break;
+			
+			default:
+				require(p);
 			}
-			require(p);
 		}
 
 		List<None> result = new ArrayList<>(inputs.size());
@@ -156,4 +171,44 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		return result;
 	}
 
+	private void installBinaryDep(String relClass, List<File> classPath) {
+		if (relClass == null)
+			return;
+		for (File cp : classPath) {
+			File classFile = new File(cp, relClass);
+			if (FileCommands.exists(classFile)) {
+				require(classFile);
+				break; // rest of classpath is irrelevant
+			}
+			else 
+				require(classFile, FileExistsStamper.instance);
+		}
+	}
+
+	private void installSourceDep(String rel, List<File> inputFiles,
+			List<File> sourcePaths,
+			List<BuildRequest<?, ?, ?, ?>> injectedDependencies,
+			File targetDir, Collection<String> additionalArgs,
+			List<File> classPath, JavaCompiler compiler) throws IOException {
+	for (File sourcePath : sourcePaths) {
+			File sourceFile = new File(sourcePath, rel);
+			if (FileCommands.exists(sourceFile)) {
+				if (!inputFiles.contains(sourceFile)) {
+					requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
+				}
+				break; // rest of sourcepaths are irrelevant
+			}
+			else
+				require(sourceFile, FileExistsStamper.instance);
+		}
+	}
+
+	private String findRelativePath(File full, Collection<File> bases) {
+		for (File base : bases) {
+			Path rel = FileCommands.getRelativePath(base, full);
+			if (rel != null)
+				return rel.toString();
+		}
+		return null;
+	}
 }
