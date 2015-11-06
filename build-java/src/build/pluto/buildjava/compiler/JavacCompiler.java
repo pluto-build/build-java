@@ -100,98 +100,76 @@ public class JavacCompiler implements JavaCompiler {
 				throw new SourceCodeException(errors);
 		}
 
-		Map<File, List<File>> generatedFiles = extractGeneratedFiles(errOut, sourcePath);
-		List<File> requiredFiles = extractRequiredFiles(errOut);
-
-		return new JavaCompilerResult(generatedFiles, requiredFiles);
+		JavaCompilerResult result = new JavaCompilerResult();
+		extractDependencies(errOut, sourcePath, result);
+		return result;
 	}
 
 	private final static String ERR_PAT = ": error: ";
 	// private final static String LINE_PAT = "(at line ";
-	private final static String START_PAT = "[checking";
+	private final static String COMP_PAT = "[checking";
 	private final static String GEN_PAT = "[wrote";
-	private final static String DEP_PAT = "[loading";
+	private final static String DEP_REGULAR_PAT = "[loading RegularFileObject";
+	private final static String DEP_ZIPPED_PAT = "[loading ZipFileIndexFileObject";
 	private final static String PARSING_PAT = "[parsing started";
 
-	private static Map<File, List<File>> extractGeneratedFiles(String errOut, Collection<File> sourcePath) {
+	private void extractDependencies(String errOut, Collection<File> sourcePath, JavaCompilerResult result) {
 		Map<String, File> parsedFiles = new HashMap<>();
-		Map<File, List<File>> generatedFiles = new HashMap<>();
 		File currentSource = null;
-		int index = 0;
-		while (true) {
-			int parsingIndex = errOut.indexOf(PARSING_PAT, index);
-			int startIndex = errOut.indexOf(START_PAT, index);
-			int genIndex = errOut.indexOf(GEN_PAT, index);
-			
-			if (genIndex < 0)
-				break;
-			
-			if (parsingIndex >= 0 && (startIndex < 0 || parsingIndex < startIndex) && (genIndex < 0 || parsingIndex < genIndex)) {
-				index = parsingIndex;
-				index += PARSING_PAT.length();
-				while (errOut.charAt(index) != '[')
-					index++;
-				index++;
-				int to = errOut.indexOf(']', index);
-				String parsedPath = errOut.substring(index, to);
+		
+		String lines[] = errOut.split("\n");
+		for (String line : lines) {
+			if (line.startsWith(PARSING_PAT)) {
+				int from = line.indexOf('[', PARSING_PAT.length()) + 1;
+				int to = line.indexOf(']', from);
+				String parsedPath = line.substring(from, to);
 				for (File path : sourcePath) {
 					Path relPath = FileCommands.getRelativePath(path, new File(parsedPath));
-					if (relPath != null)
-						parsedFiles.put(FileCommands.dropExtension(relPath).toString(), new File(parsedPath));
+					if (relPath != null) {
+						File parsedFile = new File(parsedPath);
+						parsedFiles.put(FileCommands.dropExtension(relPath).toString(), parsedFile);
+						result.addSourceFile(parsedFile);
+						break;
+					}
 				}
-			}
-			else if (startIndex >= 0 && (genIndex < 0 || startIndex < genIndex)) {
-				index = startIndex;
-				index += START_PAT.length();
-				index++;
-				int to = errOut.indexOf(']', index);
-				String module = errOut.substring(index, to);
+			} 
+			else if (line.startsWith(COMP_PAT)) {
+				int from = COMP_PAT.length() + 1;
+				int to = line.indexOf(']', from);
+				String module = line.substring(from, to);
 				File source = parsedFiles.get(module.replace('.', File.separatorChar));
 				currentSource = source;
 			}
-			else if (genIndex >= 0) {
-				index = genIndex;
-				index += GEN_PAT.length();
-				while (errOut.charAt(index) != '[')
-					index++;
-				index++;
-				int to = errOut.indexOf(']', index);
-				String generatedPath = errOut.substring(index, to);
-				List<File> files = generatedFiles.get(currentSource);
-				if (files == null) {
-					files = new ArrayList<>();
-					generatedFiles.put(currentSource, files);
-				}
-				files.add(new File(generatedPath));
+			else if (line.startsWith(GEN_PAT)) {
+				int from = line.indexOf('[', GEN_PAT.length()) + 1;
+				int to = line.indexOf(']', from);
+				String generatedPath = line.substring(from, to);
+				result.addGeneratedFile(currentSource, new File(generatedPath));
 			}
-			else
-				break;
+			else if (line.startsWith(DEP_REGULAR_PAT)) {
+				int from = line.indexOf('[', DEP_REGULAR_PAT.length()) + 1;
+				int to = line.indexOf(']', from);
+				String generatedPath = line.substring(from, to);
+				if (!generatedPath.endsWith(".java"))
+					result.addLoadedClassFile(new File(generatedPath));
+			}
+			else if (line.startsWith(DEP_ZIPPED_PAT)) {
+				int from = line.indexOf('[', DEP_ZIPPED_PAT.length()) + 1;
+				int to = line.indexOf(']', from);
+				String generatedPath = line.substring(from, to);
+				int zipFrom = generatedPath.indexOf('(');
+				int zipTo = generatedPath.indexOf(')', zipFrom);
+				String zipPath = generatedPath.substring(0, zipFrom);
+				String loaded = generatedPath.substring(zipFrom + 1, zipTo);
+				
+				if (zipPath.endsWith(".sym"))
+					loaded = loaded.substring(loaded.indexOf(".jar") + 5);
+				
+				result.addLoadedFromZippedFile(new File(zipPath), loaded);
+			}
 		}
-		return generatedFiles;
 	}
 
-	private static List<File> extractRequiredFiles(String errOut) {
-		List<File> generatedFiles = new LinkedList<>();
-		int index = 0;
-		while ((index = errOut.indexOf(DEP_PAT, index)) >= 0) {
-			index += DEP_PAT.length();
-			while (errOut.charAt(index) != '[')
-				index++;
-			index++;
-			int to = errOut.indexOf(']', index);
-			String generatedPath = errOut.substring(index, to);
-			if (generatedPath.contains(".sym")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".sym") + 4);
-			}
-			if (generatedPath.contains(".jar")) {
-				generatedPath = generatedPath.substring(0, generatedPath.lastIndexOf(".jar") + 4);
-			}
-			File file = new File(generatedPath);
-			if (!generatedFiles.contains(file))
-				generatedFiles.add(file);
-		}
-		return generatedFiles;
-	}
 
 	/**
 	 * @param stdOut

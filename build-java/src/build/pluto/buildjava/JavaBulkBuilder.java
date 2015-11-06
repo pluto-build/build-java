@@ -15,7 +15,7 @@ import org.sugarj.common.util.Pair;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
 import build.pluto.builder.bulk.BulkBuilder;
-import build.pluto.buildjava.compiler.JavaCompiler.JavaCompilerResult;
+import build.pluto.buildjava.compiler.JavaCompilerResult;
 import build.pluto.output.None;
 import build.pluto.stamp.FileHashStamper;
 
@@ -70,11 +70,11 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None> {
 			for (File file : input.getInputFiles())
 				require(source, file, FileHashStamper.instance);
 		
-		for (Entry<File, ? extends Collection<File>> e : compilerResult.getGeneratedFiles().entrySet()) {
+		for (Entry<File, ? extends Collection<File>> e : compilerResult.getSourceTargetFiles().entrySet()) {
 			for (File gen : e.getValue())
 				provide(e.getKey(), gen);
 		}
-		for (File f : compilerResult.getLoadedFiles())
+		for (File f : compilerResult.getLoadedClassFiles())
 			require(f);
 		
 		return null;

@@ -93,10 +93,11 @@ public class EclipseJavaCompiler implements JavaCompiler {
 				throw new SourceCodeException(errors);
 		}
 
-		Map<File, List<File>> generatedFiles = extractGeneratedFiles(outOut, sourcePath, targetDir);
+		Map<File, Collection<File>> generatedFiles = extractGeneratedFiles(outOut, sourcePath, targetDir);
 		List<File> requiredFiles = extractRequiredFiles(outOut);
 
-		return new JavaCompilerResult(generatedFiles, requiredFiles);
+		// TODO provided actually loaded from zipped file, last arg below.
+		return new JavaCompilerResult(generatedFiles, requiredFiles, Collections.<File, Collection<String>>emptyMap());
 	}
 
 	private final static String ERR_PAT = ": error: ";
@@ -106,9 +107,9 @@ public class EclipseJavaCompiler implements JavaCompiler {
 	private final static String DEP_PAT = "[reading";
 	private final static String PARSING_PAT = "[parsing";
 
-	private static Map<File, List<File>> extractGeneratedFiles(String outOut, Collection<File> sourcePath, File targetDir) {
+	private static Map<File, Collection<File>> extractGeneratedFiles(String outOut, Collection<File> sourcePath, File targetDir) {
 		Map<String, File> parsedFiles = new HashMap<>();
-		Map<File, List<File>> generatedFiles = new HashMap<>();
+		Map<File, Collection<File>> generatedFiles = new HashMap<>();
 		File currentSource = null;
 		int index = 0;
 		while (true) {
@@ -156,7 +157,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
 				if (!parsedFiles.containsKey(fileName))
 					throw new IllegalStateException("Cannot associate source file to " + generatedPath);
 				File source = parsedFiles.get(fileName);
-				List<File> files = generatedFiles.get(source);
+				Collection<File> files = generatedFiles.get(source);
 				if (files == null) {
 					files = new ArrayList<>();
 					generatedFiles.put(source, files);
