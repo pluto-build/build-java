@@ -1,9 +1,9 @@
 .metadata
 .recommenders
-build-java/tests/bin
+tests/bin
 target/
 META-INF/
 
-build-java/testdata/*/*/*
-!build-java/testdata/*/foo/*
+testdata/*/*/*
+!testdata/*/foo/*
 

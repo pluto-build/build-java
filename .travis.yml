@@ -1,7 +1,14 @@
 sudo: false
-script: (cd build-java; mvn deploy -U)
-# && (cd build-java-eclipse; mvn deploy -U)
 
+script: |
+  # only (attempt to) deploy non-pull request commits
+  if [[ "$TRAVIS_BRANCH" = "master" && "$TRAVIS_PULL_REQUEST" = true ]]; then
+    mvn deploy -U --batch-mode
+  else
+    # otherwise, just run test suite
+    mvn verify -U --batch-mode
+  fi
+  
 cache:
   directories:
     - '$HOME/.m2/repository'
