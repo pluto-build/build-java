@@ -123,16 +123,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			require(p, FileHashStamper.instance);
 		
 		FileCommands.createDir(targetDir);
-		JavaCompilerResult compilerResult;
-		try {
-			compilerResult = compiler.compile(inputFiles, targetDir, sourcePaths, classPath, sourceRelease, targetRelease, additionalArgs);
-		} catch (SourceCodeException e) {
-			StringBuilder errMsg = new StringBuilder("The following errors occured during compilation:\n");
-			for (Pair<SourceLocation, String> error : e.getErrors()) {
-				errMsg.append(FileCommands.dropDirectory(error.a.file) + "(" + error.a.lineStart + ":" + error.a.columnStart + "): " + error.b);
-			}
-			throw new IOException(errMsg.toString(), e);
-		}
+		JavaCompilerResult compilerResult = compiler.compile(inputFiles, targetDir, sourcePaths, classPath, sourceRelease, targetRelease, additionalArgs);
+
 		// TODO Dont register all generated files for first input
 		for (Collection<File> gens : compilerResult.getSourceTargetFiles().values())
 			for (File gen : gens)

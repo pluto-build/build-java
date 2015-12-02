@@ -2,36 +2,31 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.Log;
-import org.sugarj.common.errors.SourceCodeException;
-import org.sugarj.common.errors.SourceLocation;
-import org.sugarj.common.util.Pair;
 
+import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
-import build.pluto.builder.bulk.BulkBuilder;
 import build.pluto.buildjava.compiler.JavaCompilerResult;
 import build.pluto.output.None;
+import build.pluto.stamp.FileExistsStamper;
 import build.pluto.stamp.FileHashStamper;
+import build.pluto.stamp.LastModifiedStamper;
 
-public class JavaBulkBuilder extends BulkBuilder<JavaInput, None> {
+public class JavaBulkBuilder extends Builder<JavaInput, None> {
 
 	public JavaBulkBuilder(JavaInput input) {
 		super(input);
 	}
 
-	public final static BuilderFactory<JavaInput, BulkOutput<None>, JavaBulkBuilder> factory = BuilderFactoryFactory
-			.of(JavaBulkBuilder.class, JavaInput.class);
-
-	@Override
-	protected Collection<File> requiredFiles(JavaInput input) {
-		return input.getInputFiles();
-	}
+	public final static BuilderFactory<JavaInput, None, JavaBulkBuilder> factory = BuilderFactoryFactory.of(JavaBulkBuilder.class, JavaInput.class);
 
 	@Override
 	protected String description(JavaInput input) {
@@ -52,46 +47,127 @@ public class JavaBulkBuilder extends BulkBuilder<JavaInput, None> {
 	}
 
 	@Override
-	protected None buildBulk(JavaInput input, Set<File> changedFiles)
-			throws Exception {
-		Log.log.log("Rebuild Java files " + changedFiles, Log.CORE);
-
+	protected None build(JavaInput input) throws Exception {
 		requireBuild(input.getInjectedDependencies());
-		JavaCompilerResult compilerResult;
-		try {
-			compilerResult = input.getCompiler().compile(
-					changedFiles,
+		for (File f : input.getInputFiles())
+			require(f, FileHashStamper.instance);
+
+		FileCommands.createDir(input.getTargetDir());
+		JavaCompilerResult compilerResult =
+				input.getCompiler().compile(
+					input.getInputFiles(),
 					input.getTargetDir(),
 					input.getSourcePath(),
 					input.getClassPath(), 
 					input.getSourceRelease(),
 					input.getTargetRelease(), 
 					input.getAdditionalArgs());
-		} catch (SourceCodeException e) {
-			StringBuilder errMsg = new StringBuilder(
-					"The following errors occured during compilation:\n");
-			for (Pair<SourceLocation, String> error : e.getErrors()) {
-				errMsg.append(FileCommands.dropDirectory(error.a.file) + "("
-						+ error.a.lineStart + ":" + error.a.columnStart + "): "
-						+ error.b);
+
+
+		for (Collection<File> gens : compilerResult.getSourceTargetFiles().values())
+			for (File gen : gens)
+				provide(gen, LastModifiedStamper.instance);
+		
+		for (File source : compilerResult.getSourceTargetFiles().keySet()) {
+			// install shadow dependencies for source files
+			String relSource = findRelativePath(source, input.getSourcePath());
+			if (relSource == null)
+				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + input.getSourcePath());
+			installSourceDep(relSource, input.getSourcePath());
+			require(source);
+		}
+		
+		Set<File> requiredJars = new HashSet<>();
+		
+		for (File p : compilerResult.getLoadedClassFiles()) {
+			Path rel = FileCommands.getRelativePath(input.getTargetDir(), p);
+			// if class file is in target dir
+			if (rel != null) {
+				Path relClassSource = FileCommands.replaceExtension(rel, "java");
+				installSourceDep(relClassSource.toString(), input.getSourcePath());
+				require(p);
 			}
-			throw new IOException(errMsg.toString(), e);
+			else {
+				String relClass = findRelativePath(p, input.getClassPath());
+				installBinaryDep(relClass, input.getClassPath(), requiredJars);
+			}
 		}
 
-		// TODO use better dependency tracking for Java source-file dependencies
-		for (File source : changedFiles)
-			for (File file : input.getInputFiles())
-				require(source, file, FileHashStamper.instance);
+		for (Entry<File, Collection<String>> zipped : compilerResult.getLoadedFromZippedFile().entrySet())
+			installZipBinaryDep(zipped.getKey(), zipped.getValue(), input.getClassPath(), input.getSourcePath(), input.getTargetDir(), requiredJars);
 
-		for (Entry<File, ? extends Collection<File>> e : compilerResult
-				.getSourceTargetFiles().entrySet()) {
-			for (File gen : e.getValue())
-				provide(e.getKey(), gen);
-		}
-		for (File f : compilerResult.getLoadedClassFiles())
-			require(f);
+		for (File jar : requiredJars)
+			require(jar);
 
 		return null;
 	}
+	
+	
+	private Set<File> installBinaryDep(String relClass, List<File> classPath, Set<File> requiredJars) {
+		if (relClass == null)
+			return requiredJars;
+		for (File cp : classPath) {
+			if (cp.isFile())
+				requiredJars.add(cp);
+			else {
+				File classFile = new File(cp, relClass);
+				if (FileCommands.exists(classFile)) {
+					require(classFile);
+					break; // rest of classpath is irrelevant
+				} else
+					require(classFile, FileExistsStamper.instance);
+			}
+		}
+		return requiredJars;
+	}
+	
+	private void installZipBinaryDep(File zip, Collection<String> zipped, List<File> classPath, Collection<File> sourcePaths, File targetDir, Set<File> requiredJars) {
+		requiredJars.add(zip);
 
+		for (File cp : classPath) {
+			if (cp.equals(zip))
+				break;
+			
+			if (cp.isFile())
+				requiredJars.add(cp);
+			else {
+				boolean isTarget = cp.equals(targetDir);
+				for (String rel : zipped) {
+					if (rel.startsWith("java/lang/")) {
+						rel = rel.substring("java/lang/".length());
+					}
+					else if (rel.startsWith("java/"))
+						continue;
+					
+					require(new File(cp, rel), FileExistsStamper.instance);
+					if (isTarget) {
+						for (File sourcePath : sourcePaths) {
+							File relClassSource = FileCommands.replaceExtension(new File(sourcePath, rel), "java");
+							require(relClassSource, FileExistsStamper.instance);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void installSourceDep(String rel, List<File> sourcePaths)
+			throws IOException {
+		for (File sourcePath : sourcePaths) {
+			File sourceFile = new File(sourcePath, rel);
+			if (FileCommands.exists(sourceFile))
+				break; // rest of sourcepaths are irrelevant
+			else
+				require(sourceFile, FileExistsStamper.instance);
+		}
+	}
+
+	private String findRelativePath(File full, Collection<File> bases) {
+		for (File base : bases) {
+			Path rel = FileCommands.getRelativePath(base, full);
+			if (rel != null)
+				return rel.toString();
+		}
+		return null;
+	}
 }
