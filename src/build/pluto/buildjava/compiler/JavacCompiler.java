@@ -13,6 +13,7 @@ import org.sugarj.common.Exec;
 import org.sugarj.common.Exec.ExecutionError;
 import org.sugarj.common.Exec.ExecutionResult;
 import org.sugarj.common.FileCommands;
+import org.sugarj.common.Log;
 import org.sugarj.common.StringCommands;
 import org.sugarj.common.errors.SourceCodeException;
 import org.sugarj.common.errors.SourceLocation;
@@ -103,6 +104,7 @@ public class JavacCompiler implements JavaCompiler {
 		} catch (ExecutionError e) {
 			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
+		Log.log.log(errOut, Log.DETAIL);
 
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
@@ -185,6 +187,13 @@ public class JavacCompiler implements JavaCompiler {
 	 * @param stdOut
 	 */
 	private static List<Pair<SourceLocation, String>> parseJavacErrors(String s) {
+		int invalidSource = s.indexOf("invalid source release");
+		if (invalidSource >= 0)
+			throw new IllegalArgumentException("javac: " + s.substring(invalidSource));
+		int invalidTarget = s.indexOf("invalid target release");
+		if (invalidTarget >= 0)
+			throw new IllegalArgumentException("javac: " + s.substring(invalidTarget));
+		
 		List<Pair<SourceLocation, String>> errors = new LinkedList<Pair<SourceLocation, String>>();
 		int index = 0;
 		while ((index = s.indexOf(ERR_PAT, index)) >= 0) {

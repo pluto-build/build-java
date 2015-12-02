@@ -116,16 +116,17 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		case CreateOrUpdate:
 		case Update:
 			modePath = "";
+			break;
 		default:
 			modePath = input.mode.modeForPath() + ".";
 		}
 
 		if (input.jarPath != null)
-			return FileCommands.addExtension(input.jarPath, modePath + "." + "dep");
+			return FileCommands.addExtension(input.jarPath, modePath + "dep");
 		int hash = input.files.hashCode();
 		if (input.manifestPath != null)
-			return FileCommands.addExtension(input.manifestPath, "jar." + modePath + "." + hash + ".dep");
-		return new File("./jar." + modePath + "." + hash + ".dep");
+			return FileCommands.addExtension(input.manifestPath, "jar." + modePath + hash + ".dep");
+		return new File("./jar." + modePath + hash + ".dep");
 	}
 
 	@Override
