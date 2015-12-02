@@ -96,13 +96,13 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		case Create:
 		case CreateOrUpdate:
 		case Update:
-			return "Generate JAR file";
+			return "Generate JAR file " + input.jarPath;
 		case Extract:
-			return "Extract files from JAR file";
+			return "Extract files from JAR file" + input.jarPath;
 		case List:
-			return "List table of contents of JAR file";
+			return "List table of contents of JAR file" + input.jarPath;
 		case GenIndex:
-			return "Create index information from JAR file";
+			return "Create index information from JAR file" + input.jarPath;
 		default:
 			return "";
 		}
