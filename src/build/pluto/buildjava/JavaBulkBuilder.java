@@ -30,14 +30,7 @@ public class JavaBulkBuilder extends Builder<JavaInput, None> {
 
 	@Override
 	protected String description(JavaInput input) {
-		StringBuilder builder = new StringBuilder();
-		for (File f : input.getInputFiles())
-			builder.append(f.getName()).append(", ");
-		String list = builder.toString();
-		if (!list.isEmpty())
-			list = list.substring(0, list.length() - 2);
-
-		return "Compile Java files " + list;
+		return "Compile Java files";
 	}
 
 	@Override

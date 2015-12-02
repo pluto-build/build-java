@@ -8,13 +8,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.sugarj.common.FileCommands;
-import org.sugarj.common.errors.SourceCodeException;
-import org.sugarj.common.errors.SourceLocation;
-import org.sugarj.common.util.Pair;
 
 import build.pluto.builder.BuildCycle;
 import build.pluto.builder.BuildCycleAtOnceBuilder;
@@ -70,15 +67,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	@Override
 	protected String description(ArrayList<JavaInput> input) {
-		StringBuilder builder = new StringBuilder();
-		for (JavaInput inp : input)
-			for (File f : inp.getInputFiles())
-				builder.append(f.getName()).append(", ");
-		String list = builder.toString();
-		if (!list.isEmpty())
-			list = list.substring(0, list.length() - 2);
-		
-		return "Compile Java files " + list; 
+		return "Compile Java files"; 
 	}
 
 	@Override
