@@ -39,6 +39,8 @@ public class JavacCompiler implements JavaCompiler {
 			File targetDir, 
 			Collection<File> sourcePath,
 			Collection<File> classPath,
+			String sourceRelease,
+			String targetRelease,
 			Collection<String> additionalArguments) throws Exception {
 		StringBuilder cpBuilder = new StringBuilder();
 
@@ -71,6 +73,14 @@ public class JavacCompiler implements JavaCompiler {
 		cmd.add("-nowarn");
 		cmd.add("-verbose");
 		cmd.add("-implicit:none");
+		if (sourceRelease != null) {
+			cmd.add("-source");
+			cmd.add(sourceRelease);
+		}
+		if (targetRelease != null) {
+			cmd.add("-target");
+			cmd.add(targetRelease);
+		}
 
 
 		if (additionalArguments != null)

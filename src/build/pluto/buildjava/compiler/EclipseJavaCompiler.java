@@ -36,6 +36,8 @@ public class EclipseJavaCompiler implements JavaCompiler {
 			File targetDir, 
 			Collection<File> sourcePath,
 			Collection<File> classPath,
+			String sourceRelease,
+			String targetRelease,
 			Collection<String> additionalArguments) throws Exception {
 		StringBuilder cpBuilder = new StringBuilder();
 
@@ -66,7 +68,14 @@ public class EclipseJavaCompiler implements JavaCompiler {
 		cmd.add(FileCommands.toWindowsPath(targetDir.getAbsolutePath()));
 		cmd.add("-nowarn");
 		cmd.add("-verbose");
-
+		if (sourceRelease != null) {
+			cmd.add("-source");
+			cmd.add(sourceRelease);
+		}
+		if (targetRelease != null) {
+			cmd.add("-target");
+			cmd.add(targetRelease);
+		}
 
 		if (additionalArguments != null)
 			for (String arg : additionalArguments)

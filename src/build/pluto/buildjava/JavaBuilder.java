@@ -125,7 +125,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		FileCommands.createDir(targetDir);
 		JavaCompilerResult compilerResult;
 		try {
-			compilerResult = compiler.compile(inputFiles, targetDir, sourcePaths, classPath, additionalArgs);
+			compilerResult = compiler.compile(inputFiles, targetDir, sourcePaths, classPath, sourceRelease, targetRelease, additionalArgs);
 		} catch (SourceCodeException e) {
 			StringBuilder errMsg = new StringBuilder("The following errors occured during compilation:\n");
 			for (Pair<SourceLocation, String> error : e.getErrors()) {

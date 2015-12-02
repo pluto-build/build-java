@@ -10,5 +10,7 @@ public interface JavaCompiler extends Serializable {
 			File targetDir, 
 			Collection<File> sourcePath,
 			Collection<File> classPath,
+			String sourceRelease,
+			String targetRelease,
 			Collection<String> additionalArguments) throws Exception;
 }
