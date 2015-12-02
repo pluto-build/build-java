@@ -94,6 +94,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 	protected String description(Input input) {
 		switch (input.mode) {
 		case Create:
+		case CreateOrUpdate:
 		case Update:
 			return "Generate JAR file";
 		case Extract:
@@ -109,8 +110,16 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 
 	@Override
 	public File persistentPath(Input input) {
-		String mode = input.mode.modeForPath();
-		String modePath = "generate".equals(mode) ? ""  : mode + "." ;
+		String modePath;
+		switch (input.mode) {
+		case Create:
+		case CreateOrUpdate:
+		case Update:
+			modePath = "";
+		default:
+			modePath = input.mode.modeForPath() + ".";
+		}
+
 		if (input.jarPath != null)
 			return FileCommands.addExtension(input.jarPath, modePath + "." + "dep");
 		int hash = input.files.hashCode();
