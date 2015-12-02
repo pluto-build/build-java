@@ -110,12 +110,13 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 	@Override
 	public File persistentPath(Input input) {
 		String mode = input.mode.modeForPath();
+		String modePath = "generate".equals(mode) ? ""  : mode + "." ;
 		if (input.jarPath != null)
-			return FileCommands.addExtension(input.jarPath, mode + "." + "dep");
+			return FileCommands.addExtension(input.jarPath, modePath + "." + "dep");
 		int hash = input.files.hashCode();
 		if (input.manifestPath != null)
-			return FileCommands.addExtension(input.manifestPath, "jar." + mode + "." + hash + ".dep");
-		return new File("./jar." + mode + "." + hash + ".dep");
+			return FileCommands.addExtension(input.manifestPath, "jar." + modePath + "." + hash + ".dep");
+		return new File("./jar." + modePath + "." + hash + ".dep");
 	}
 
 	@Override
