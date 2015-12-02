@@ -22,6 +22,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	private final List<File> sourcePath;
 	private final List<File> classPath;
 	private final Collection<String> additionalArgs;
+	private final String sourceRelease;
+	private final String targetRelease;
 	private final JavaCompiler compiler;
 	private final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
 
@@ -31,6 +33,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			List<File> sourcePath, 
 			List<File> classPath,
 			Collection<String> additionalArgs,
+			String sourceRelease, 
+			String targetRelease,
 			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
 			JavaCompiler compiler) {
 		if (sourcePath == null || sourcePath.isEmpty()) {
@@ -46,31 +50,20 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.sourcePath = sourcePath;
 		this.classPath = (classPath == null || classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : classPath;
 		this.additionalArgs = additionalArgs;
+		this.sourceRelease = sourceRelease;
+		this.targetRelease = targetRelease;
 		if (requiredUnits == null || requiredUnits.isEmpty())
 			this.injectedDependencies = null;
 		else
 			this.injectedDependencies = requiredUnits;
 		this.compiler = compiler;
 	}
-	
-	public JavaInput(File inputFile, File targetDir, List<File> sourcePath,
-			List<File> classPath, Collection<String> additionalArgs,
-			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
-			JavaCompiler compiler) {
-		this(	Collections.singletonList(inputFile),
-				targetDir,
-				sourcePath,
-				classPath,
-				additionalArgs,
-				requiredUnits,
-				compiler);
-	}
 
 	public JavaInput(List<File> inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
-		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, compiler);
+		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, null, compiler);
 	}
 	public JavaInput(File inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
-		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, compiler);
+		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, null, compiler);
 	}
 
 	@Override
@@ -98,7 +91,15 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	public List<File> getClassPath() {
 		return classPath;
 	}
+	
+	public String getSourceRelease() {
+		return sourceRelease;
+	}
 
+	public String getTargetRelease() {
+		return targetRelease;
+	}
+	
 	public JavaCompiler getCompiler() {
 		return compiler;
 	}

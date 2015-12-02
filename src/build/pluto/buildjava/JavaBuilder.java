@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -100,6 +101,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		File targetDir = inputs.get(0).getTargetDir();
 		Collection<String> additionalArgs = inputs.get(0).getAdditionalArgs();
 		List<File> classPath = new ArrayList<>();
+		String sourceRelease = inputs.get(0).getSourceRelease();
+		String targetRelease = inputs.get(0).getTargetRelease();
 		JavaCompiler compiler = inputs.get(0).getCompiler();
 		
 		for (JavaInput input : inputs) {
@@ -140,7 +143,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			String relSource = findRelativePath(source, sourcePaths);
 			if (relSource == null)
 				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + sourcePaths.toString());
-			installSourceDep(relSource, inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, compiler);
+			installSourceDep(relSource, inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 			require(source);
 		}
 		
@@ -149,7 +152,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			// if class file is in target dir
 			if (rel != null) {
 				Path relClassSource = FileCommands.replaceExtension(rel, "java");
-				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, compiler);
+				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 				require(p);
 			}
 			else {
@@ -217,16 +220,22 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		}
 	}
 
-	private void installSourceDep(String rel, List<File> inputFiles,
+	private void installSourceDep(
+			String rel, 
+			List<File> inputFiles,
 			List<File> sourcePaths,
 			List<BuildRequest<?, ?, ?, ?>> injectedDependencies,
-			File targetDir, Collection<String> additionalArgs,
-			List<File> classPath, JavaCompiler compiler) throws IOException {
+			File targetDir, 
+			Collection<String> additionalArgs,
+			List<File> classPath,
+			String sourceRelease, 
+			String targetRelease, 
+			JavaCompiler compiler) throws IOException {
 	for (File sourcePath : sourcePaths) {
 			File sourceFile = new File(sourcePath, rel);
 			if (FileCommands.exists(sourceFile)) {
 				if (!inputFiles.contains(sourceFile)) {
-					requireBuild(JavaBuilder.request(new JavaInput(sourceFile, targetDir, sourcePaths, classPath, additionalArgs, injectedDependencies, compiler)));
+					requireBuild(JavaBuilder.request(new JavaInput(Collections.singletonList(sourceFile), targetDir, sourcePaths, classPath, additionalArgs, sourceRelease, targetRelease, injectedDependencies, compiler)));
 				}
 				break; // rest of sourcepaths are irrelevant
 			}
