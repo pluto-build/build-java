@@ -20,8 +20,6 @@ import org.sugarj.common.errors.SourceLocation;
 import org.sugarj.common.path.AbsolutePath;
 import org.sugarj.common.util.Pair;
 
-import com.cedarsoftware.util.StringUtilities;
-
 /**
  * 
  * Provides methods related to processing Java. Mainly, we provide a method for
@@ -107,7 +105,7 @@ public class JavacCompiler implements JavaCompiler {
 			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
 		Log.log.log(StringCommands.printListSeparated(cmd, " "), Log.DETAIL);
-		Log.log.log(errOut, Log.DETAIL);
+//		Log.log.log(errOut, Log.DETAIL);
 
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
@@ -211,6 +209,7 @@ public class JavacCompiler implements JavaCompiler {
 			String file = s.substring(fileStart + 1, lineStart);
 			index += ERR_PAT.length();
 			int errorEnd = s.indexOf("\n", index);
+			errorEnd = s.indexOf("\n", errorEnd + 1);
 			String msg = s.substring(index, errorEnd);
 
 			int columnLineStart = s.indexOf("\n", s.indexOf("\n", errorEnd));
