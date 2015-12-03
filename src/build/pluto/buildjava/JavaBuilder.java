@@ -2,6 +2,7 @@ package build.pluto.buildjava;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +51,11 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		private Object readResolve() {
 			return INSTANCE;
 		}
+		
+		public boolean isOverlappingGeneratedFileCompatible(File overlap, Serializable input, BuilderFactory<?, ?, ?> otherFactory, Serializable otherInput) {
+			return false;
+		}
+
 	}
 
 	public static BuildRequest<ArrayList<JavaInput>, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> request(JavaInput input) {
