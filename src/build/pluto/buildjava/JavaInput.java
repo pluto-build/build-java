@@ -56,11 +56,11 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.compiler = compiler;
 	}
 
-	public JavaInput(List<File> inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
-		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, null, compiler);
+	public JavaInput(List<File> inputFile, File targetDir, File sourcePath, Origin filesOrigin, JavaCompiler compiler) {
+		this(inputFile, targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, filesOrigin, compiler);
 	}
-	public JavaInput(File inputFile, File targetDir, File sourcePath, JavaCompiler compiler) {
-		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, null, compiler);
+	public JavaInput(File inputFile, File targetDir, File sourcePath, Origin filesOrigin, JavaCompiler compiler) {
+		this(Collections.singletonList(inputFile), targetDir, Collections.singletonList(sourcePath), Collections.singletonList(targetDir), null, null, null, filesOrigin, compiler);
 	}
 
 	@Override

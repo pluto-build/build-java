@@ -12,7 +12,6 @@ import org.sugarj.common.FileCommands;
 import build.pluto.buildjava.JavaBuilder;
 import build.pluto.buildjava.JavaInput;
 import build.pluto.buildjava.compiler.EclipseJavaCompiler;
-import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.test.build.ScopedBuildTest;
 import build.pluto.test.build.ScopedPath;
 import build.pluto.test.build.TrackingBuildManager;
@@ -31,7 +30,7 @@ public class SimpleJavaEclipseBuildTest extends ScopedBuildTest {
 
 	private TrackingBuildManager build() throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
-		manager.require(JavaBuilder.request(new JavaInput(classAsource, targetDir, sourcePath, EclipseJavaCompiler.instance)));
+		manager.require(JavaBuilder.request(new JavaInput(classAsource, targetDir, sourcePath, null, EclipseJavaCompiler.instance)));
 		return manager;
 	}
 

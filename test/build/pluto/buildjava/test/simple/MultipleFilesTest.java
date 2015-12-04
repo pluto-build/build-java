@@ -32,7 +32,7 @@ public class MultipleFilesTest extends ScopedBuildTest {
 
 	private TrackingBuildManager build() throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
-		manager.require(JavaBuilder.request(new JavaInput(classAsource, targetDir, sourcePath, JavacCompiler.instance)));
+		manager.require(JavaBuilder.request(new JavaInput(classAsource, targetDir, sourcePath, null, JavacCompiler.instance)));
 		return manager;
 	}
 
