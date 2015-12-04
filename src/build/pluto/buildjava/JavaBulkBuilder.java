@@ -41,7 +41,7 @@ public class JavaBulkBuilder extends Builder<JavaInput, None> {
 
 	@Override
 	protected None build(JavaInput input) throws Exception {
-		requireBuild(input.getInjectedDependencies());
+		requireBuild(input.getFilesOrigin());
 		for (File f : input.getInputFiles())
 			require(f, FileHashStamper.instance);
 

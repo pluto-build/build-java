@@ -22,6 +22,7 @@ import build.pluto.builder.CycleHandler;
 import build.pluto.builder.CycleHandlerFactory;
 import build.pluto.buildjava.compiler.JavaCompiler;
 import build.pluto.buildjava.compiler.JavaCompilerResult;
+import build.pluto.dependency.Origin;
 import build.pluto.output.None;
 import build.pluto.stamp.FileExistsStamper;
 import build.pluto.stamp.FileHashStamper;
@@ -92,7 +93,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 	public List<None> buildAll(ArrayList<JavaInput> inputs) throws Throwable {
 		List<File> inputFiles = new ArrayList<>();
 		List<File> sourcePaths = new ArrayList<>();
-		List<BuildRequest<?, ?, ?, ?>> injectedDependencies = new ArrayList<>();
+		Origin.Builder originBuilder = Origin.Builder();
 		File targetDir = inputs.get(0).getTargetDir();
 		Collection<String> additionalArgs = inputs.get(0).getAdditionalArgs();
 		List<File> classPath = new ArrayList<>();
@@ -111,9 +112,12 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			for (File p : input.getClassPath())
 				if (!classPath.contains(p))
 					classPath.add(p);
-			injectedDependencies.addAll(input.getInjectedDependencies());
+			originBuilder.from(input.getFilesOrigin());
 		}
-		requireBuild(injectedDependencies);
+		
+		Origin origin = originBuilder.build();
+		requireBuild(origin);
+		
 		for (File p : inputFiles)
 			require(p, FileHashStamper.instance);
 		
@@ -130,7 +134,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			String relSource = findRelativePath(source, sourcePaths);
 			if (relSource == null)
 				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + sourcePaths.toString());
-			installSourceDep(relSource, inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
+			installSourceDep(relSource, inputFiles, sourcePaths, origin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 			require(source);
 		}
 		
@@ -139,7 +143,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			// if class file is in target dir
 			if (rel != null) {
 				Path relClassSource = FileCommands.replaceExtension(rel, "java");
-				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, injectedDependencies, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
+				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, origin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 				require(p);
 			}
 			else {
@@ -211,7 +215,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			String rel, 
 			List<File> inputFiles,
 			List<File> sourcePaths,
-			List<BuildRequest<?, ?, ?, ?>> injectedDependencies,
+			Origin origin,
 			File targetDir, 
 			Collection<String> additionalArgs,
 			List<File> classPath,
@@ -222,7 +226,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			File sourceFile = new File(sourcePath, rel);
 			if (FileCommands.exists(sourceFile)) {
 				if (!inputFiles.contains(sourceFile)) {
-					requireBuild(JavaBuilder.request(new JavaInput(Collections.singletonList(sourceFile), targetDir, sourcePaths, classPath, additionalArgs, sourceRelease, targetRelease, injectedDependencies, compiler)));
+					requireBuild(JavaBuilder.request(new JavaInput(Collections.singletonList(sourceFile), targetDir, sourcePaths, classPath, additionalArgs, sourceRelease, targetRelease, origin, compiler)));
 				}
 				break; // rest of sourcepaths are irrelevant
 			}

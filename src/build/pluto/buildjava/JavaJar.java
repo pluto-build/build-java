@@ -12,10 +12,10 @@ import org.sugarj.common.Exec;
 import org.sugarj.common.FileCommands;
 import org.sugarj.common.StringCommands;
 
-import build.pluto.builder.BuildRequest;
 import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.dependency.Origin;
 import build.pluto.output.None;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
@@ -75,14 +75,14 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 		 * The files of the jar file: a map from classpath to Files to include
 		 */
 		public final Map<File, Set<File>> files;
-		public final BuildRequest<?, ?, ?, ?>[] requiredUnits;
+		public final Origin filesOrigin;
 
-		public Input(Mode mode, File jarPath, File manifestPath, Map<File, Set<File>> files, BuildRequest<?, ?, ?, ?>[] requiredUnits) {
+		public Input(Mode mode, File jarPath, File manifestPath, Map<File, Set<File>> files, Origin filesOrigin) {
 			this.mode = mode;
 			this.jarPath = jarPath;
 			this.manifestPath = manifestPath;
 			this.files = files;
-			this.requiredUnits = requiredUnits;
+			this.filesOrigin = filesOrigin;
 		}
 	}
 
@@ -136,7 +136,7 @@ public class JavaJar extends Builder<JavaJar.Input, None> {
 
 	@Override
 	protected None build(Input input) throws IOException {
-		requireBuild(input.requiredUnits);
+		requireBuild(input.filesOrigin);
 
 		List<String> flags = new ArrayList<>();
 		List<String> args = new ArrayList<>();

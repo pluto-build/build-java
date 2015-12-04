@@ -7,9 +7,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import build.pluto.builder.BuildRequest;
 import build.pluto.buildjava.compiler.JavaCompiler;
 import build.pluto.dependency.IMetaBuildingEnabled;
+import build.pluto.dependency.Origin;
 
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	public static enum Compiler {
@@ -25,7 +25,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	private final String sourceRelease;
 	private final String targetRelease;
 	private final JavaCompiler compiler;
-	private final List<BuildRequest<?, ?, ?, ?>> injectedDependencies;
+	private final Origin filesOrigin;
 
 	public JavaInput(
 			List<File> inputFiles,
@@ -35,7 +35,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			Collection<String> additionalArgs,
 			String sourceRelease, 
 			String targetRelease,
-			List<BuildRequest<?, ?, ?, ?>> requiredUnits,
+			Origin filesOrigin,
 			JavaCompiler compiler) {
 		if (sourcePath == null || sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Provide at least one source path!");
@@ -52,10 +52,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.additionalArgs = additionalArgs;
 		this.sourceRelease = sourceRelease;
 		this.targetRelease = targetRelease;
-		if (requiredUnits == null || requiredUnits.isEmpty())
-			this.injectedDependencies = null;
-		else
-			this.injectedDependencies = requiredUnits;
+		this.filesOrigin = filesOrigin;
 		this.compiler = compiler;
 	}
 
@@ -104,17 +101,15 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		return compiler;
 	}
 	
-	public List<BuildRequest<?, ?, ?, ?>> getInjectedDependencies() {
-		if (injectedDependencies == null)
-			return Collections.emptyList();
-		else
-			return injectedDependencies;
+	public Origin getFilesOrigin() {
+		return filesOrigin;
 	}
 
 	@Override
 	public String toString() {
 		return "JavaInput(input=" + inputFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
-				+ additionalArgs + ", deps=" + injectedDependencies;
+				+ additionalArgs + ", origin=" + filesOrigin
+				;
 	}
 
 }
