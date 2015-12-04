@@ -115,7 +115,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			originBuilder.from(input.getFilesOrigin());
 		}
 		
-		Origin origin = originBuilder.build();
+		Origin origin = originBuilder.get();
 		requireBuild(origin);
 		
 		for (File p : inputFiles)
