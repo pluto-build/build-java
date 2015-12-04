@@ -112,7 +112,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			for (File p : input.getClassPath())
 				if (!classPath.contains(p))
 					classPath.add(p);
-			originBuilder.from(input.getFilesOrigin());
+			originBuilder.add(input.getFilesOrigin());
 		}
 		
 		Origin origin = originBuilder.get();
