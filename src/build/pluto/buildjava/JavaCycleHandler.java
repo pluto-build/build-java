@@ -35,8 +35,8 @@ public class JavaCycleHandler extends
 		
 		for (BuildRequest<?, ?, ?, ?> req : cycle.getCycleComponents())
 			for (JavaInput input : (ArrayList<JavaInput>) req.input)
-				if (!input.getTargetDir().equals(initialInput.getTargetDir())
-					|| !Objects.equals(input.getAdditionalArgs(), initialInput.getAdditionalArgs()))
+				if (!input.targetDir.equals(initialInput.targetDir)
+					|| !Objects.equals(input.additionalArgs, initialInput.additionalArgs))
 					return false;
 		
 		return true;

@@ -69,7 +69,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	@Override
 	protected File singletonPersistencePath(JavaInput input) {
-		return new File(input.getTargetDir(), "compile.java."+ input.getInputFiles().hashCode() +".dep");
+		return new File(input.targetDir, "compile.java."+ input.inputFiles.hashCode() +".dep");
 	}
 
 	@Override
@@ -94,25 +94,25 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		List<File> inputFiles = new ArrayList<>();
 		List<File> sourcePaths = new ArrayList<>();
 		Origin.Builder originBuilder = Origin.Builder();
-		File targetDir = inputs.get(0).getTargetDir();
-		Collection<String> additionalArgs = inputs.get(0).getAdditionalArgs();
+		File targetDir = inputs.get(0).targetDir;
+		Collection<String> additionalArgs = inputs.get(0).additionalArgs;
 		List<File> classPath = new ArrayList<>();
-		String sourceRelease = inputs.get(0).getSourceRelease();
-		String targetRelease = inputs.get(0).getTargetRelease();
-		JavaCompiler compiler = inputs.get(0).getCompiler();
+		String sourceRelease = inputs.get(0).sourceRelease;
+		String targetRelease = inputs.get(0).targetRelease;
+		JavaCompiler compiler = inputs.get(0).compiler;
 		
 		for (JavaInput input : inputs) {
-			for (File p : input.getInputFiles())
+			for (File p : input.inputFiles)
 				if (!inputFiles.contains(p)) {
 					inputFiles.add(p);
 				}
-			for (File p : input.getSourcePath())
+			for (File p : input.sourcePath)
 				if (!sourcePaths.contains(p))
 					sourcePaths.add(p);
-			for (File p : input.getClassPath())
+			for (File p : input.classPath)
 				if (!classPath.contains(p))
 					classPath.add(p);
-			originBuilder.add(input.getFilesOrigin());
+			originBuilder.add(input.filesOrigin);
 		}
 		
 		Origin origin = originBuilder.get();
@@ -226,7 +226,19 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			File sourceFile = new File(sourcePath, rel);
 			if (FileCommands.exists(sourceFile)) {
 				if (!inputFiles.contains(sourceFile)) {
-					requireBuild(JavaBuilder.request(new JavaInput(Collections.singletonList(sourceFile), targetDir, sourcePaths, classPath, additionalArgs, sourceRelease, targetRelease, origin, compiler)));
+					JavaInput input = new JavaInput
+							.Builder()
+							.addInputFiles(sourceFile)
+							.setFilesOrigin(origin)
+							.setTargetDir(targetDir)
+							.addSourcePaths(sourcePaths)
+							.addClassPaths(classPath)
+							.addAdditionalArgs(additionalArgs)
+							.setSourceRelease(sourceRelease)
+							.setTargetRelease(targetRelease)
+							.setCompiler(compiler)
+							.get();
+					requireBuild(JavaBuilder.factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
 				}
 				break; // rest of sourcepaths are irrelevant
 			}

@@ -34,7 +34,14 @@ public class TypeShadowingTest extends ScopedBuildTest {
 	private TrackingBuildManager build(File... inputs) throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
 		for (File input : inputs) {
-			manager.require(JavaBuilder.request(new JavaInput(input, targetDir, sourcePath, null, JavacCompiler.instance)));
+			JavaInput javaInput = new JavaInput
+					.Builder()
+					.addInputFiles(input)
+					.setTargetDir(targetDir)
+					.addSourcePaths(sourcePath)
+					.setCompiler(JavacCompiler.instance)
+					.get();
+			manager.require(JavaBuilder.request(javaInput));
 		}
 		return manager;
 	}

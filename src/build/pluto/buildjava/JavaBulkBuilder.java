@@ -35,26 +35,26 @@ public class JavaBulkBuilder extends Builder<JavaInput, None> {
 
 	@Override
 	public File persistentPath(JavaInput input) {
-		return new File(input.getTargetDir(), "compile.java."
-				+ input.getInputFiles().hashCode() + ".dep");
+		return new File(input.targetDir, "compile.java."
+				+ input.inputFiles.hashCode() + ".dep");
 	}
 
 	@Override
 	protected None build(JavaInput input) throws Exception {
-		requireBuild(input.getFilesOrigin());
-		for (File f : input.getInputFiles())
+		requireBuild(input.filesOrigin);
+		for (File f : input.inputFiles)
 			require(f, FileHashStamper.instance);
 
-		FileCommands.createDir(input.getTargetDir());
+		FileCommands.createDir(input.targetDir);
 		JavaCompilerResult compilerResult =
-				input.getCompiler().compile(
-					input.getInputFiles(),
-					input.getTargetDir(),
-					input.getSourcePath(),
-					input.getClassPath(), 
-					input.getSourceRelease(),
-					input.getTargetRelease(), 
-					input.getAdditionalArgs());
+				input.compiler.compile(
+					input.inputFiles,
+					input.targetDir,
+					input.sourcePath,
+					input.classPath, 
+					input.sourceRelease,
+					input.targetRelease, 
+					input.additionalArgs);
 
 
 		for (Collection<File> gens : compilerResult.getSourceTargetFiles().values())
@@ -63,31 +63,31 @@ public class JavaBulkBuilder extends Builder<JavaInput, None> {
 		
 		for (File source : compilerResult.getSourceTargetFiles().keySet()) {
 			// install shadow dependencies for source files
-			String relSource = findRelativePath(source, input.getSourcePath());
+			String relSource = findRelativePath(source, input.sourcePath);
 			if (relSource == null)
-				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + input.getSourcePath());
-			installSourceDep(relSource, input.getSourcePath());
+				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + input.sourcePath);
+			installSourceDep(relSource, input.sourcePath);
 			require(source);
 		}
 		
 		Set<File> requiredJars = new HashSet<>();
 		
 		for (File p : compilerResult.getLoadedClassFiles()) {
-			Path rel = FileCommands.getRelativePath(input.getTargetDir(), p);
+			Path rel = FileCommands.getRelativePath(input.targetDir, p);
 			// if class file is in target dir
 			if (rel != null) {
 				Path relClassSource = FileCommands.replaceExtension(rel, "java");
-				installSourceDep(relClassSource.toString(), input.getSourcePath());
+				installSourceDep(relClassSource.toString(), input.sourcePath);
 				require(p);
 			}
 			else {
-				String relClass = findRelativePath(p, input.getClassPath());
-				installBinaryDep(relClass, input.getClassPath(), requiredJars);
+				String relClass = findRelativePath(p, input.classPath);
+				installBinaryDep(relClass, input.classPath, requiredJars);
 			}
 		}
 
 		for (Entry<File, Collection<String>> zipped : compilerResult.getLoadedFromZippedFile().entrySet())
-			installZipBinaryDep(zipped.getKey(), zipped.getValue(), input.getClassPath(), input.getSourcePath(), input.getTargetDir(), requiredJars);
+			installZipBinaryDep(zipped.getKey(), zipped.getValue(), input.classPath, input.sourcePath, input.targetDir, requiredJars);
 
 		for (File jar : requiredJars)
 			require(jar);

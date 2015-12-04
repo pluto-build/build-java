@@ -30,7 +30,14 @@ public class SimpleJavaBuildTest extends ScopedBuildTest {
 
 	private TrackingBuildManager build() throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
-		manager.require(JavaBuilder.request(new JavaInput(classAsource, targetDir, sourcePath, null, JavacCompiler.instance)));
+		JavaInput input = new JavaInput
+				.Builder()
+				.addInputFiles(classAsource)
+				.setTargetDir(targetDir)
+				.addSourcePaths(sourcePath)
+				.setCompiler(JavacCompiler.instance)
+				.get();
+		manager.require(JavaBuilder.request(input));
 		return manager;
 	}
 
