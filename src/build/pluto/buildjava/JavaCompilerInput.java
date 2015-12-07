@@ -55,7 +55,7 @@ public class JavaCompilerInput implements Serializable, IMetaBuildingEnabled {
 
 	@Override
 	public String toString() {
-		return "JavaInput(input=" + sourceFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
+		return "JavaCompilerInput(input=" + sourceFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
 				+ additionalArgs + ", origin=" + sourceOrigin
 				+ ")";
 	}
