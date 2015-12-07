@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sugarj.common.Exec;
-import org.sugarj.common.Exec.ExecutionError;
 import org.sugarj.common.Exec.ExecutionResult;
 import org.sugarj.common.StringCommands;
 
-import build.pluto.BuildUnit.State;
 import build.pluto.builder.Builder;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.BuilderFactoryFactory;
@@ -51,17 +49,8 @@ public class JavaRunner extends Builder<JavaRunnerInput, Out<ExecutionResult>> {
 		if (input.programArgs != null)
 			command.addAll(input.programArgs);
 		
-		try {
-	    	ExecutionResult er = Exec.run(input.workingDir, command.toArray(new String[command.size()]));
-			return OutputPersisted.of(er);
-    	} catch (ExecutionError e) {
-    		String msg = StringCommands.printListSeparated(e.outMsgs, "\n") + StringCommands.printListSeparated(e.errMsgs, "\n");
-    		String cmd = StringCommands.printListSeparated(e.cmds, " ");
-    		reportError("Execution failed>>>\n" + cmd + "\n" + msg);
-    		report("<<<Execution failed");
-    		setState(State.FAILURE);
-    		return null;
-    	}
+    	ExecutionResult er = Exec.run(input.workingDir, command.toArray(new String[command.size()]));
+		return OutputPersisted.of(er);
 	}
 
 }

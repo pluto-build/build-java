@@ -23,11 +23,15 @@ public class JavaRunnerInput implements Serializable {
 
 	private JavaRunnerInput(Builder builder) {
 		this.description = builder.description;
-		this.workingDir = builder.workingDir;
 		this.mainClass = Objects.requireNonNull(builder.mainClass, "Name of main class is missing.");
+
+		if (builder.workingDir == null)
+			this.workingDir = new File(".").getAbsoluteFile();
+		else
+			this.workingDir = builder.workingDir;
 		
 		if (builder.classPath == null || builder.classPath.isEmpty())
-			this.classPath = Collections.singletonList(new File(".").getAbsoluteFile());
+			this.classPath = Collections.singletonList(workingDir.getAbsoluteFile());
 		else
 			this.classPath = Collections.unmodifiableList(builder.classPath);
 		this.vmArgs = Collections.unmodifiableCollection(builder.vmArgs);
