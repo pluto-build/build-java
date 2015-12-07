@@ -16,9 +16,9 @@ import build.pluto.output.None;
  *
  */
 public class JavaCycleHandler extends
-		BuildAtOnceCycleHandler<JavaInput, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> {
+		BuildAtOnceCycleHandler<JavaCompilerInput, None, JavaCompiler, BuilderFactory<ArrayList<JavaCompilerInput>, None, JavaCompiler>> {
 
-	protected JavaCycleHandler(BuildCycle cycle, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> builderFactory) {
+	protected JavaCycleHandler(BuildCycle cycle, BuilderFactory<ArrayList<JavaCompilerInput>, None, JavaCompiler> builderFactory) {
 		super(cycle, builderFactory);
 	}
 
@@ -31,10 +31,10 @@ public class JavaCycleHandler extends
 		// Java builder needs not only all components in the cycle be a java
 		// compilation task, but also that they have same compiler args and
 		// target directory
-		JavaInput initialInput = ((ArrayList<JavaInput>) cycle.getInitial().input).get(0);
+		JavaCompilerInput initialInput = ((ArrayList<JavaCompilerInput>) cycle.getInitial().input).get(0);
 		
 		for (BuildRequest<?, ?, ?, ?> req : cycle.getCycleComponents())
-			for (JavaInput input : (ArrayList<JavaInput>) req.input)
+			for (JavaCompilerInput input : (ArrayList<JavaCompilerInput>) req.input)
 				if (!input.targetDir.equals(initialInput.targetDir)
 					|| !Objects.equals(input.additionalArgs, initialInput.additionalArgs))
 					return false;

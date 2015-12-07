@@ -19,7 +19,7 @@ import build.pluto.builder.BuildRequest;
 import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.CycleHandler;
 import build.pluto.builder.CycleHandlerFactory;
-import build.pluto.buildjava.compiler.JavaCompiler;
+import build.pluto.buildjava.compiler.IJavaCompiler;
 import build.pluto.buildjava.compiler.JavaCompilerResult;
 import build.pluto.dependency.Origin;
 import build.pluto.output.None;
@@ -28,9 +28,9 @@ import build.pluto.stamp.FileHashStamper;
 import build.pluto.stamp.LastModifiedStamper;
 import build.pluto.stamp.Stamper;
 
-public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
+public class JavaCompiler extends BuildCycleAtOnceBuilder<JavaCompilerInput, None> {
 
-	public static final BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> factory = JavaBuilderFactory.INSTANCE;
+	public static final BuilderFactory<ArrayList<JavaCompilerInput>, None, JavaCompiler> factory = JavaBuilderFactory.INSTANCE;
 	private static final CycleHandlerFactory javaCycleSupportFactory = new CycleHandlerFactory() {
 		@Override
 		public CycleHandler createCycleSupport(BuildCycle cycle) {
@@ -38,14 +38,14 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		}
 	};
 
-	static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder> {
+	static class JavaBuilderFactory implements BuilderFactory<ArrayList<JavaCompilerInput>, None, JavaCompiler> {
 		private static final long serialVersionUID = -1714722510759449143L;
 
 		private static final JavaBuilderFactory INSTANCE = new JavaBuilderFactory();
 
 		@Override
-		public JavaBuilder makeBuilder(ArrayList<JavaInput> input) {
-			return new JavaBuilder(input);
+		public JavaCompiler makeBuilder(ArrayList<JavaCompilerInput> input) {
+			return new JavaCompiler(input);
 		}
 
 		private Object readResolve() {
@@ -58,21 +58,21 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	}
 
-	public static BuildRequest<ArrayList<JavaInput>, None, JavaBuilder, BuilderFactory<ArrayList<JavaInput>, None, JavaBuilder>> request(JavaInput input) {
+	public static BuildRequest<ArrayList<JavaCompilerInput>, None, JavaCompiler, BuilderFactory<ArrayList<JavaCompilerInput>, None, JavaCompiler>> request(JavaCompilerInput input) {
 		return new BuildRequest<>(factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
 	}
 
-	public JavaBuilder(ArrayList<JavaInput> input) {
+	public JavaCompiler(ArrayList<JavaCompilerInput> input) {
 		super(input, factory);
 	}
 
 	@Override
-	protected File singletonPersistencePath(JavaInput input) {
+	protected File singletonPersistencePath(JavaCompilerInput input) {
 		return new File(input.targetDir, "compile.java."+ input.sourceFiles.hashCode() +".dep");
 	}
 
 	@Override
-	protected String description(ArrayList<JavaInput> input) {
+	protected String description(ArrayList<JavaCompilerInput> input) {
 		return "Compile Java files"; 
 	}
 
@@ -89,7 +89,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 	private Set<File> requiredJars = new HashSet<>();
 	
 	@Override
-	public List<None> buildAll(ArrayList<JavaInput> inputs) throws Throwable {
+	public List<None> buildAll(ArrayList<JavaCompilerInput> inputs) throws Throwable {
 		List<File> inputFiles = new ArrayList<>();
 		List<File> sourcePaths = new ArrayList<>();
 		Origin.Builder sourceOriginBuilder = Origin.Builder();
@@ -99,9 +99,9 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		List<File> classPath = new ArrayList<>();
 		String sourceRelease = inputs.get(0).sourceRelease;
 		String targetRelease = inputs.get(0).targetRelease;
-		JavaCompiler compiler = inputs.get(0).compiler;
+		IJavaCompiler compiler = inputs.get(0).compiler;
 		
-		for (JavaInput input : inputs) {
+		for (JavaCompilerInput input : inputs) {
 			for (File p : input.sourceFiles)
 				if (!inputFiles.contains(p)) {
 					inputFiles.add(p);
@@ -225,12 +225,12 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			List<File> classPath,
 			String sourceRelease, 
 			String targetRelease, 
-			JavaCompiler compiler) throws IOException {
+			IJavaCompiler compiler) throws IOException {
 	for (File sourcePath : sourcePaths) {
 			File sourceFile = new File(sourcePath, rel);
 			if (FileCommands.exists(sourceFile)) {
 				if (!inputFiles.contains(sourceFile)) {
-					JavaInput input = new JavaInput
+					JavaCompilerInput input = new JavaCompilerInput
 							.Builder()
 							.addInputFiles(sourceFile)
 							.setSourceOrigin(sourceOrigin)
@@ -243,7 +243,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 							.setTargetRelease(targetRelease)
 							.setCompiler(compiler)
 							.get();
-					requireBuild(JavaBuilder.factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
+					requireBuild(JavaCompiler.factory, BuildCycleAtOnceBuilder.singletonArrayList(input));
 				}
 				break; // rest of sourcepaths are irrelevant
 			}

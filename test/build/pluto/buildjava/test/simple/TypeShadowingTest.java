@@ -9,8 +9,8 @@ import java.io.PrintStream;
 
 import org.junit.Test;
 
-import build.pluto.buildjava.JavaBuilder;
-import build.pluto.buildjava.JavaInput;
+import build.pluto.buildjava.JavaCompiler;
+import build.pluto.buildjava.JavaCompilerInput;
 import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.test.build.ScopedBuildTest;
 import build.pluto.test.build.ScopedPath;
@@ -34,14 +34,14 @@ public class TypeShadowingTest extends ScopedBuildTest {
 	private TrackingBuildManager build(File... inputs) throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
 		for (File input : inputs) {
-			JavaInput javaInput = new JavaInput
+			JavaCompilerInput javaInput = new JavaCompilerInput
 					.Builder()
 					.addInputFiles(input)
 					.setTargetDir(targetDir)
 					.addSourcePaths(sourcePath)
 					.setCompiler(JavacCompiler.instance)
 					.get();
-			manager.require(JavaBuilder.request(javaInput));
+			manager.require(JavaCompiler.request(javaInput));
 		}
 		return manager;
 	}

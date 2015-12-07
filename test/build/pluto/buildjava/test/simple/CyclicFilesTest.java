@@ -9,8 +9,8 @@ import java.io.IOException;
 import org.junit.Test;
 import org.sugarj.common.FileCommands;
 
-import build.pluto.buildjava.JavaBuilder;
-import build.pluto.buildjava.JavaInput;
+import build.pluto.buildjava.JavaCompiler;
+import build.pluto.buildjava.JavaCompilerInput;
 import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.test.build.ScopedBuildTest;
 import build.pluto.test.build.ScopedPath;
@@ -33,14 +33,14 @@ public class CyclicFilesTest extends ScopedBuildTest {
 
 	private TrackingBuildManager build() throws IOException {
 		TrackingBuildManager manager = new TrackingBuildManager();
-		JavaInput input = new JavaInput
+		JavaCompilerInput input = new JavaCompilerInput
 				.Builder()
 				.addInputFiles(classAsource)
 				.setTargetDir(targetDir)
 				.addSourcePaths(sourcePath)
 				.setCompiler(JavacCompiler.instance)
 				.get();
-		manager.require(JavaBuilder.request(input));
+		manager.require(JavaCompiler.request(input));
 		return manager;
 	}
 

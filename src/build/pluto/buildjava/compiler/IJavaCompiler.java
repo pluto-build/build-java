@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 
-public interface JavaCompiler extends Serializable {
+public interface IJavaCompiler extends Serializable {
 	public JavaCompilerResult compile(
 			Collection<File> sourceFiles,
 			File targetDir, 

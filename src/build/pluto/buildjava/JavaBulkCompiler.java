@@ -20,27 +20,27 @@ import build.pluto.stamp.FileExistsStamper;
 import build.pluto.stamp.FileHashStamper;
 import build.pluto.stamp.LastModifiedStamper;
 
-public class JavaBulkBuilder extends Builder<JavaInput, None> {
+public class JavaBulkCompiler extends Builder<JavaCompilerInput, None> {
 
-	public JavaBulkBuilder(JavaInput input) {
+	public JavaBulkCompiler(JavaCompilerInput input) {
 		super(input);
 	}
 
-	public final static BuilderFactory<JavaInput, None, JavaBulkBuilder> factory = BuilderFactoryFactory.of(JavaBulkBuilder.class, JavaInput.class);
+	public final static BuilderFactory<JavaCompilerInput, None, JavaBulkCompiler> factory = BuilderFactoryFactory.of(JavaBulkCompiler.class, JavaCompilerInput.class);
 
 	@Override
-	protected String description(JavaInput input) {
+	protected String description(JavaCompilerInput input) {
 		return "Compile Java files";
 	}
 
 	@Override
-	public File persistentPath(JavaInput input) {
+	public File persistentPath(JavaCompilerInput input) {
 		return new File(input.targetDir, "compile.java."
 				+ input.sourceFiles.hashCode() + ".dep");
 	}
 
 	@Override
-	protected None build(JavaInput input) throws Exception {
+	protected None build(JavaCompilerInput input) throws Exception {
 		requireBuild(input.sourceOrigin);
 		requireBuild(input.classOrigin);
 		

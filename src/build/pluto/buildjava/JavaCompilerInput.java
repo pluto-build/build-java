@@ -7,12 +7,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import build.pluto.buildjava.compiler.JavaCompiler;
+import build.pluto.buildjava.compiler.IJavaCompiler;
 import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.dependency.IMetaBuildingEnabled;
 import build.pluto.dependency.Origin;
 
-public class JavaInput implements Serializable, IMetaBuildingEnabled {
+public class JavaCompilerInput implements Serializable, IMetaBuildingEnabled {
 	private static final long serialVersionUID = -8905198283548748809L;
 
 	public final List<File> sourceFiles;
@@ -24,9 +24,9 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	public final String targetRelease;
 	public final Origin sourceOrigin;
 	public final Origin classOrigin;
-	public final JavaCompiler compiler;
+	public final IJavaCompiler compiler;
 
-	private JavaInput(Builder builder) {
+	private JavaCompilerInput(Builder builder) {
 		if (builder.sourcePath == null || builder.sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Source path may not be empty.");
 		}
@@ -70,12 +70,12 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		private Collection<String> additionalArgs = new ArrayList<>();
 		private String sourceRelease;
 		private String targetRelease;
-		private JavaCompiler compiler;
+		private IJavaCompiler compiler;
 		private Origin sourceOrigin;
 		private Origin classOrigin;
 		
-		public JavaInput get() { 
-			return new JavaInput(this);
+		public JavaCompilerInput get() { 
+			return new JavaCompilerInput(this);
 		}
 		
 		public Builder addInputFiles(File... files) {
@@ -137,7 +137,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			return this;
 		}
 		
-		public Builder setCompiler(JavaCompiler compiler) {
+		public Builder setCompiler(IJavaCompiler compiler) {
 			this.compiler = compiler;
 			return this;
 		}

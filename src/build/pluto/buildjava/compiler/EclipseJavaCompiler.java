@@ -24,7 +24,7 @@ import org.sugarj.common.util.Pair;
  * Provides methods related to processing Java. Mainly, we provide a method for
  * compiling Java code.
  */
-public class EclipseJavaCompiler implements JavaCompiler {
+public class EclipseJavaCompiler implements IJavaCompiler {
 
 	private static final long serialVersionUID = 1494247105986013915L;
 	

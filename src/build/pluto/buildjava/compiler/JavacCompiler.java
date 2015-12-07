@@ -28,7 +28,7 @@ import org.sugarj.common.util.Pair;
  * @author Manuel Weiel <weiel at st.informatik.tu-darmstadt.de
  *
  */
-public class JavacCompiler implements JavaCompiler {
+public class JavacCompiler implements IJavaCompiler {
 
 	private static final long serialVersionUID = 1494247105986013915L;
 	
