@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -69,7 +68,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 
 	@Override
 	protected File singletonPersistencePath(JavaInput input) {
-		return new File(input.targetDir, "compile.java."+ input.inputFiles.hashCode() +".dep");
+		return new File(input.targetDir, "compile.java."+ input.sourceFiles.hashCode() +".dep");
 	}
 
 	@Override
@@ -93,7 +92,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 	public List<None> buildAll(ArrayList<JavaInput> inputs) throws Throwable {
 		List<File> inputFiles = new ArrayList<>();
 		List<File> sourcePaths = new ArrayList<>();
-		Origin.Builder originBuilder = Origin.Builder();
+		Origin.Builder sourceOriginBuilder = Origin.Builder();
+		Origin.Builder classOriginBuilder = Origin.Builder();
 		File targetDir = inputs.get(0).targetDir;
 		Collection<String> additionalArgs = inputs.get(0).additionalArgs;
 		List<File> classPath = new ArrayList<>();
@@ -102,7 +102,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 		JavaCompiler compiler = inputs.get(0).compiler;
 		
 		for (JavaInput input : inputs) {
-			for (File p : input.inputFiles)
+			for (File p : input.sourceFiles)
 				if (!inputFiles.contains(p)) {
 					inputFiles.add(p);
 				}
@@ -112,11 +112,14 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			for (File p : input.classPath)
 				if (!classPath.contains(p))
 					classPath.add(p);
-			originBuilder.add(input.filesOrigin);
+			sourceOriginBuilder.add(input.sourceOrigin);
+			classOriginBuilder.add(input.classOrigin);
 		}
 		
-		Origin origin = originBuilder.get();
-		requireBuild(origin);
+		Origin sourceOrigin = sourceOriginBuilder.get();
+		Origin classOrigin = classOriginBuilder.get();
+		requireBuild(sourceOrigin);
+		requireBuild(classOrigin);
 		
 		for (File p : inputFiles)
 			require(p, FileHashStamper.instance);
@@ -134,7 +137,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			String relSource = findRelativePath(source, sourcePaths);
 			if (relSource == null)
 				throw new IllegalStateException("Cannot find source file " + source + " in sourcepath " + sourcePaths.toString());
-			installSourceDep(relSource, inputFiles, sourcePaths, origin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
+			installSourceDep(relSource, inputFiles, sourcePaths, sourceOrigin, classOrigin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 			require(source);
 		}
 		
@@ -143,7 +146,7 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			// if class file is in target dir
 			if (rel != null) {
 				Path relClassSource = FileCommands.replaceExtension(rel, "java");
-				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, origin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
+				installSourceDep(relClassSource.toString(), inputFiles, sourcePaths, sourceOrigin, classOrigin, targetDir, additionalArgs, classPath, sourceRelease, targetRelease, compiler);
 				require(p);
 			}
 			else {
@@ -215,7 +218,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 			String rel, 
 			List<File> inputFiles,
 			List<File> sourcePaths,
-			Origin origin,
+			Origin sourceOrigin,
+			Origin classOrigin,
 			File targetDir, 
 			Collection<String> additionalArgs,
 			List<File> classPath,
@@ -229,7 +233,8 @@ public class JavaBuilder extends BuildCycleAtOnceBuilder<JavaInput, None> {
 					JavaInput input = new JavaInput
 							.Builder()
 							.addInputFiles(sourceFile)
-							.setFilesOrigin(origin)
+							.setSourceOrigin(sourceOrigin)
+							.setClassOrigin(classOrigin)
 							.setTargetDir(targetDir)
 							.addSourcePaths(sourcePaths)
 							.addClassPaths(classPath)

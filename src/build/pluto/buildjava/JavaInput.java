@@ -15,15 +15,16 @@ import build.pluto.dependency.Origin;
 public class JavaInput implements Serializable, IMetaBuildingEnabled {
 	private static final long serialVersionUID = -8905198283548748809L;
 
-	public final List<File> inputFiles;
+	public final List<File> sourceFiles;
 	public final File targetDir;
 	public final List<File> sourcePath;
 	public final List<File> classPath;
 	public final Collection<String> additionalArgs;
 	public final String sourceRelease;
 	public final String targetRelease;
+	public final Origin sourceOrigin;
+	public final Origin classOrigin;
 	public final JavaCompiler compiler;
-	public final Origin filesOrigin;
 
 	private JavaInput(Builder builder) {
 		if (builder.sourcePath == null || builder.sourcePath.isEmpty()) {
@@ -33,7 +34,7 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		List<File> absoluteInputFiles = new ArrayList<>(builder.inputFiles.size());
 		for (File f : builder.inputFiles)
 			absoluteInputFiles.add(f.getAbsoluteFile());
-		this.inputFiles = Collections.unmodifiableList(absoluteInputFiles);
+		this.sourceFiles = Collections.unmodifiableList(absoluteInputFiles);
 		
 		this.targetDir = (builder.targetDir != null ? builder.targetDir : new File(".")).getAbsoluteFile();
 		this.sourcePath = builder.sourcePath;
@@ -41,7 +42,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		this.additionalArgs = builder.additionalArgs;
 		this.sourceRelease = builder.sourceRelease;
 		this.targetRelease = builder.targetRelease;
-		this.filesOrigin = builder.filesOrigin;
+		this.sourceOrigin = builder.sourceOrigin;
+		this.classOrigin = builder.classOrigin;
 		this.compiler = builder.compiler == null ? JavacCompiler.instance : builder.compiler;
 	}
 
@@ -53,8 +55,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 
 	@Override
 	public String toString() {
-		return "JavaInput(input=" + inputFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
-				+ additionalArgs + ", origin=" + filesOrigin
+		return "JavaInput(input=" + sourceFiles + ", target=" + targetDir + ", sourcePath=" + sourcePath + ", classPath=" + classPath + ", args="
+				+ additionalArgs + ", origin=" + sourceOrigin
 				+ ")";
 	}
 
@@ -69,7 +71,8 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 		private String sourceRelease;
 		private String targetRelease;
 		private JavaCompiler compiler;
-		private Origin filesOrigin;
+		private Origin sourceOrigin;
+		private Origin classOrigin;
 		
 		public JavaInput get() { 
 			return new JavaInput(this);
@@ -139,8 +142,13 @@ public class JavaInput implements Serializable, IMetaBuildingEnabled {
 			return this;
 		}
 		
-		public Builder setFilesOrigin(Origin filesOrigin) {
-			this.filesOrigin = filesOrigin;
+		public Builder setSourceOrigin(Origin sourceOrigin) {
+			this.sourceOrigin = sourceOrigin;
+			return this;
+		}
+		
+		public Builder setClassOrigin(Origin classOrigin) {
+			this.classOrigin = classOrigin;
 			return this;
 		}
 	}

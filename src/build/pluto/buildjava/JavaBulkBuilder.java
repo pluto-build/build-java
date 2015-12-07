@@ -36,19 +36,21 @@ public class JavaBulkBuilder extends Builder<JavaInput, None> {
 	@Override
 	public File persistentPath(JavaInput input) {
 		return new File(input.targetDir, "compile.java."
-				+ input.inputFiles.hashCode() + ".dep");
+				+ input.sourceFiles.hashCode() + ".dep");
 	}
 
 	@Override
 	protected None build(JavaInput input) throws Exception {
-		requireBuild(input.filesOrigin);
-		for (File f : input.inputFiles)
+		requireBuild(input.sourceOrigin);
+		requireBuild(input.classOrigin);
+		
+		for (File f : input.sourceFiles)
 			require(f, FileHashStamper.instance);
 
 		FileCommands.createDir(input.targetDir);
 		JavaCompilerResult compilerResult =
 				input.compiler.compile(
-					input.inputFiles,
+					input.sourceFiles,
 					input.targetDir,
 					input.sourcePath,
 					input.classPath, 
