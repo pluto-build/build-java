@@ -31,12 +31,12 @@ public class JavaRunner extends Builder<JavaRunnerInput, Out<ExecutionResult>> {
 	protected String description(JavaRunnerInput input) {
 		if (input.description != null)
 			return input.description;
-		return "Run Java class " + input.mainClass;
+		return "Run Java class " + input.mainClass + " with arguments " + input.programArgs;
 	}
 
 	@Override
 	public File persistentPath(JavaRunnerInput input) {
-		return new File(input.workingDir, "run." + input.mainClass + ".dep");
+		return new File(input.workingDir, "run." + input.mainClass + input.programArgs.hashCode() + ".dep");
 	}
 
 	@Override

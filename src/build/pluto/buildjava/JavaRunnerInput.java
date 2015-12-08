@@ -34,8 +34,8 @@ public class JavaRunnerInput implements Serializable {
 			this.classPath = Collections.singletonList(workingDir.getAbsoluteFile());
 		else
 			this.classPath = Collections.unmodifiableList(builder.classPath);
-		this.vmArgs = Collections.unmodifiableCollection(builder.vmArgs);
-		this.programArgs = Collections.unmodifiableCollection(builder.programArgs);
+		this.vmArgs = Collections.unmodifiableList(builder.vmArgs);
+		this.programArgs = Collections.unmodifiableList(builder.programArgs);
 		this.classOrigin = builder.classOrigin;
 	}
 
@@ -51,8 +51,8 @@ public class JavaRunnerInput implements Serializable {
 		private File workingDir;
 		private String mainClass;
 		private List<File> classPath = new ArrayList<>();
-		private Collection<String> vmArgs = new ArrayList<>();
-		private Collection<String> programArgs = new ArrayList<>();
+		private List<String> vmArgs = new ArrayList<>();
+		private List<String> programArgs = new ArrayList<>();
 		private Origin classOrigin;
 		
 		public JavaRunnerInput get() { 
@@ -61,12 +61,12 @@ public class JavaRunnerInput implements Serializable {
 		
 		public Builder addClassPaths(File... classPaths) {
 			for (File f : classPaths)
-				classPath.add(f);
+				classPath.add(f.getAbsoluteFile());
 			return this;
 		}
 		public Builder addClassPaths(Iterable<File> classPaths) {
 			for (File f : classPaths)
-				classPath.add(f);
+				classPath.add(f.getAbsoluteFile());
 			return this;
 		}
 		
@@ -103,7 +103,7 @@ public class JavaRunnerInput implements Serializable {
 		}
 		
 		public Builder setWorkingDir(File workingDir) {
-			this.workingDir = workingDir;
+			this.workingDir = workingDir.getAbsoluteFile();
 			return this;
 		}
 		
