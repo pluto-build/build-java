@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sugarj.common.Exec;
+import org.sugarj.common.Log;
 import org.sugarj.common.Exec.ExecutionError;
 import org.sugarj.common.Exec.ExecutionResult;
 import org.sugarj.common.StringCommands;
@@ -58,6 +59,8 @@ public class JavaRunner extends Builder<JavaRunnerInput, Out<ExecutionResult>> {
 			command.addAll(input.programArgs);
 		
 		requireBuild(input.classOrigin);
+		
+		Log.log.log(StringCommands.printListSeparated(command, " "), Log.DETAIL);
 		try {
 	    	ExecutionResult er = Exec.run(input.workingDir, command.toArray(new String[command.size()]));
 	    	String[] outMsgs = installDependencies(er.outMsgs, !verboseInput);

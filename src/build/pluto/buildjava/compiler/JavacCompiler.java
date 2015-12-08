@@ -91,7 +91,8 @@ public class JavacCompiler implements IJavaCompiler {
 		for (File sourceFile : sourceFiles)
 			cmd.add(FileCommands.toWindowsPath(sourceFile.getAbsolutePath()));
 
-		// String stdOut;
+		Log.log.log(StringCommands.printListSeparated(cmd, " "), Log.DETAIL);
+		
 		String errOut;
 		boolean ok = false;
 		try {
@@ -99,13 +100,10 @@ public class JavacCompiler implements IJavaCompiler {
 			
 			ExecutionResult result = Exec.run(cmd.toArray(new String[cmd.size()]));
 			ok = true;
-//			 stdOut = StringCommands.printListSeparated(result.outMsgs, "\n");
 			errOut = StringCommands.printListSeparated(result.errMsgs, "\n");
 		} catch (ExecutionError e) {
 			errOut = StringCommands.printListSeparated(e.errMsgs, "\n");
 		}
-		Log.log.log(StringCommands.printListSeparated(cmd, " "), Log.DETAIL);
-//		Log.log.log(errOut, Log.DETAIL);
 
 		if (!ok) {
 			List<Pair<SourceLocation, String>> errors = parseJavacErrors(errOut);
