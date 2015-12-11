@@ -31,6 +31,9 @@ public class JavaCompilerInput implements Serializable, IMetaBuildingEnabled {
 			throw new IllegalArgumentException("Source path may not be empty.");
 		}
 		
+		if (builder.inputFiles == null || builder.inputFiles.isEmpty())
+			throw new IllegalArgumentException("Builder requires source input files.");
+		
 		List<File> absoluteInputFiles = new ArrayList<>(builder.inputFiles.size());
 		for (File f : builder.inputFiles)
 			absoluteInputFiles.add(f.getAbsoluteFile());
