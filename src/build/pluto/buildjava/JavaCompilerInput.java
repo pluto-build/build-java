@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.filefilter.SuffixFileFilter;
+import org.sugarj.common.FileCommands;
+
 import build.pluto.buildjava.compiler.IJavaCompiler;
 import build.pluto.buildjava.compiler.JavacCompiler;
 import build.pluto.dependency.IMetaBuildingEnabled;
@@ -30,17 +33,22 @@ public class JavaCompilerInput implements Serializable, IMetaBuildingEnabled {
 		if (builder.sourcePath == null || builder.sourcePath.isEmpty()) {
 			throw new IllegalArgumentException("Source path may not be empty.");
 		}
+		this.sourcePath = builder.sourcePath;
 		
-		if (builder.inputFiles == null || builder.inputFiles.isEmpty())
-			throw new IllegalArgumentException("Builder requires source input files.");
-		
-		List<File> absoluteInputFiles = new ArrayList<>(builder.inputFiles.size());
-		for (File f : builder.inputFiles)
-			absoluteInputFiles.add(f.getAbsoluteFile());
+		List<File> absoluteInputFiles;
+		if (builder.inputFiles != null && !builder.inputFiles.isEmpty()) {
+			absoluteInputFiles = new ArrayList<>();
+			for (File f : builder.inputFiles)
+				absoluteInputFiles.add(f.getAbsoluteFile());
+		}
+		else {
+			absoluteInputFiles = new ArrayList<>();
+			for (File srcPath : sourcePath)
+				absoluteInputFiles.addAll(FileCommands.listFilesRecursive(srcPath, new SuffixFileFilter(".java")));
+		}
 		this.sourceFiles = Collections.unmodifiableList(absoluteInputFiles);
 		
 		this.targetDir = (builder.targetDir != null ? builder.targetDir : new File(".")).getAbsoluteFile();
-		this.sourcePath = builder.sourcePath;
 		this.classPath = (builder.classPath == null || builder.classPath.isEmpty()) ? Collections.singletonList(this.targetDir) : builder.classPath;
 		this.additionalArgs = builder.additionalArgs;
 		this.sourceRelease = builder.sourceRelease;

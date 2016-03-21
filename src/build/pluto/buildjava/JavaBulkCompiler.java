@@ -35,8 +35,7 @@ public class JavaBulkCompiler extends Builder<JavaCompilerInput, None> {
 
 	@Override
 	public File persistentPath(JavaCompilerInput input) {
-		return new File(input.targetDir, "compile.java."
-				+ input.sourceFiles.hashCode() + ".dep");
+		return new File(input.targetDir, "compile.java." + input.sourceFiles.hashCode() + ".dep");
 	}
 
 	@Override
