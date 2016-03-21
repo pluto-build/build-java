@@ -6,7 +6,7 @@ import java.util.Objects;
 import build.pluto.builder.BuildAtOnceCycleHandler;
 import build.pluto.builder.BuildCycle;
 import build.pluto.builder.BuildRequest;
-import build.pluto.builder.BuilderFactory;
+import build.pluto.builder.factory.BuilderFactory;
 import build.pluto.output.None;
 
 /**

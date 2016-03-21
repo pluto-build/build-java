@@ -7,14 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.sugarj.common.Exec;
-import org.sugarj.common.Log;
 import org.sugarj.common.Exec.ExecutionError;
 import org.sugarj.common.Exec.ExecutionResult;
+import org.sugarj.common.Log;
 import org.sugarj.common.StringCommands;
 
 import build.pluto.builder.Builder;
-import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.builder.factory.BuilderFactory;
+import build.pluto.builder.factory.BuilderFactoryFactory;
 import build.pluto.output.Out;
 import build.pluto.output.OutputPersisted;
 import build.pluto.stamp.LastModifiedStamper;

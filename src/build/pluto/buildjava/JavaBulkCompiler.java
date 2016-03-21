@@ -12,8 +12,8 @@ import java.util.Set;
 import org.sugarj.common.FileCommands;
 
 import build.pluto.builder.Builder;
-import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.builder.factory.BuilderFactory;
+import build.pluto.builder.factory.BuilderFactoryFactory;
 import build.pluto.buildjava.compiler.JavaCompilerResult;
 import build.pluto.output.None;
 import build.pluto.stamp.FileExistsStamper;

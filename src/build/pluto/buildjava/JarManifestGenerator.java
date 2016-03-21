@@ -9,8 +9,8 @@ import java.util.List;
 import org.sugarj.common.FileCommands;
 
 import build.pluto.builder.Builder;
-import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.builder.factory.BuilderFactory;
+import build.pluto.builder.factory.BuilderFactoryFactory;
 import build.pluto.output.None;
 
 public class JarManifestGenerator extends Builder<JarManifestGenerator.Input, None> {
