@@ -12,14 +12,14 @@ import java.util.jar.Manifest;
 import org.sugarj.common.FileCommands;
 
 import build.pluto.builder.Builder;
-import build.pluto.builder.BuilderFactory;
-import build.pluto.builder.BuilderFactoryFactory;
+import build.pluto.builder.factory.BuilderFactory;
+import build.pluto.builder.factory.BuilderFactoryFactory;
 import build.pluto.dependency.Origin;
 import build.pluto.output.None;
 
 public class JarBuilder extends Builder<JarBuilder.Input, None> {
-    public static BuilderFactory<Input, None, JarBuilder> factory = BuilderFactoryFactory.of(JarBuilder.class,
-        Input.class);
+    public static BuilderFactory<Input, None, JarBuilder> factory =
+        BuilderFactoryFactory.of(JarBuilder.class, Input.class);
 
     public static class Entry implements Serializable {
         private static final long serialVersionUID = -5162228015108592112L;
@@ -63,20 +63,32 @@ public class JarBuilder extends Builder<JarBuilder.Input, None> {
          * Path where jar file will be created.
          */
         public final File jarPath;
+
         /**
          * The files of the jar. Each entry represents the file or directory to archive, and the relative path in the
          * jar where to archive it.
          */
         public final Iterable<Entry> files;
+
         /**
          * Origin for the files.
          */
         public final Origin origin;
 
-        public Input(File jarPath, Iterable<Entry> files, Origin origin) {
+        /**
+         * Optional path to store the dependency file.
+         */
+        public final File depPath;
+
+        public Input(File jarPath, Iterable<Entry> files, Origin origin, File depPath) {
             this.jarPath = jarPath;
             this.origin = origin;
             this.files = files;
+            this.depPath = depPath;
+        }
+
+        public Input(File jarPath, Iterable<Entry> files, Origin origin) {
+            this(jarPath, files, origin, null);
         }
     }
 
@@ -89,6 +101,10 @@ public class JarBuilder extends Builder<JarBuilder.Input, None> {
     }
 
     @Override public File persistentPath(Input input) {
+        if(input.depPath != null) {
+            return input.depPath;
+        }
+
         // HACK: not entirely sound; hash collisions may recognize non-equal file maps as equal.
         final int filesHash = input.files.hashCode();
         return FileCommands.addExtension(input.jarPath, filesHash + ".dep");

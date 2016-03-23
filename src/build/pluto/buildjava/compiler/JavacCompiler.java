@@ -186,6 +186,8 @@ public class JavacCompiler implements IJavaCompiler {
 	 * @param stdOut
 	 */
 	private static List<Pair<SourceLocation, String>> parseJavacErrors(String s) {
+	  if (s.contains("conflicts with default source"))
+	    throw new IllegalArgumentException(s);
 		int invalidSource = s.indexOf("invalid source release");
 		if (invalidSource >= 0)
 			throw new IllegalArgumentException("javac: " + s.substring(invalidSource));

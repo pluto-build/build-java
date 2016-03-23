@@ -16,12 +16,13 @@ import org.sugarj.common.FileCommands;
 import build.pluto.builder.BuildCycle;
 import build.pluto.builder.BuildCycleAtOnceBuilder;
 import build.pluto.builder.BuildRequest;
-import build.pluto.builder.BuilderFactory;
 import build.pluto.builder.CycleHandler;
 import build.pluto.builder.CycleHandlerFactory;
+import build.pluto.builder.factory.BuilderFactory;
 import build.pluto.buildjava.compiler.IJavaCompiler;
 import build.pluto.buildjava.compiler.JavaCompilerResult;
 import build.pluto.dependency.Origin;
+import build.pluto.executor.InputParser;
 import build.pluto.output.None;
 import build.pluto.stamp.FileExistsStamper;
 import build.pluto.stamp.FileHashStamper;
@@ -54,6 +55,11 @@ public class JavaCompiler extends BuildCycleAtOnceBuilder<JavaCompilerInput, Non
 		
 		public boolean isOverlappingGeneratedFileCompatible(File overlap, Serializable input, BuilderFactory<?, ?, ?> otherFactory, Serializable otherInput) {
 			return false;
+		}
+
+		@Override
+		public InputParser<ArrayList<JavaCompilerInput>> inputParser() {
+			return null;
 		}
 
 	}
