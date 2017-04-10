@@ -5,13 +5,13 @@
 >
   <modelVersion>4.0.0</modelVersion>
   <artifactId>build-java</artifactId>
-  <version>1.6.0</version>
+  <version>1.7.0</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>build.pluto</groupId>
     <artifactId>maven-config-java</artifactId>
-    <version>1.1.1</version>
+    <version>1.2.0</version>
     <relativePath />
   </parent>
 
@@ -24,7 +24,7 @@
     <dependency>
       <groupId>build.pluto</groupId>
       <artifactId>pluto</artifactId>
-      <version>1.10.0</version>
+      <version>1.11.0</version>
     </dependency>
 
     <dependency>
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>build.pluto</groupId>
       <artifactId>pluto</artifactId>
-      <version>1.10.0</version>
+      <version>1.11.0</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
